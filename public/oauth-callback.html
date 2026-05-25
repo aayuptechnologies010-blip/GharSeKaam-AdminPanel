@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GharSeKro.com OAuth Handler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .manual-section {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .token-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        .redirect-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .redirect-btn:hover {
+            background: #45a049;
+        }
+        .info-text {
+            font-size: 14px;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>GharSeKro.com OAuth Callback Handler</h2>
+        <div class="spinner"></div>
+        <p>Processing OAuth callback...</p>
+        
+        <div class="manual-section" id="manualSection" style="display: none;">
+            <h3>Manual Token Entry</h3>
+            <p class="info-text">
+                If automatic redirect didn't work, please copy the token from the API response and paste it below:
+            </p>
+            
+            <input type="text" id="tokenInput" class="token-input" placeholder="Paste your token here..." />
+            <input type="text" id="nameInput" class="token-input" placeholder="Enter your name..." />
+            <input type="text" id="emailInput" class="token-input" placeholder="Enter your email..." />
+            <input type="text" id="profileInput" class="token-input" placeholder="Enter your profile URL (optional)..." />
+            
+            <div>
+                <button class="redirect-btn" onclick="redirectToSetup()">Go to Shop Setup (New User)</button>
+                <button class="redirect-btn" onclick="redirectToDashboard()">Go to Dashboard (Existing User)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check if we're being redirected from OAuth callback
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        
+        if (code) {
+            // This is an OAuth callback with authorization code
+            console.log('OAuth callback detected with code:', code);
+            
+            // Show manual section after 3 seconds if no automatic redirect
+            setTimeout(() => {
+                document.getElementById('manualSection').style.display = 'block';
+            }, 3000);
+            
+            // You could make an API call here to exchange the code for tokens
+            // For now, we'll show the manual section
+        } else {
+            // Check for direct token parameters (if redirected from backend)
+            const token = urlParams.get('token');
+            const name = urlParams.get('name');
+            const email = urlParams.get('email');
+            const profile = urlParams.get('profile');
+            const success = urlParams.get('success');
+            
+            if (token) {
+                console.log('Direct token detected:', { token: !!token, name, email, success });
+                
+                // Redirect to the appropriate page
+                const targetUrl = new URL('http://localhost:8081/auth');
+                targetUrl.searchParams.set('token', token);
+                if (name) targetUrl.searchParams.set('name', name);
+                if (email) targetUrl.searchParams.set('email', email);
+                if (profile) targetUrl.searchParams.set('profile', profile);
+                if (success) targetUrl.searchParams.set('success', success);
+                
+                console.log('Redirecting to:', targetUrl.toString());
+                window.location.href = targetUrl.toString();
+            } else {
+                // No token found, show manual section
+                setTimeout(() => {
+                    document.getElementById('manualSection').style.display = 'block';
+                }, 1000);
+            }
+        }
+        
+        function redirectToSetup() {
+            const token = document.getElementById('tokenInput').value;
+            const name = document.getElementById('nameInput').value;
+            const email = document.getElementById('emailInput').value;
+            const profile = document.getElementById('profileInput').value;
+            
+            if (!token || !name || !email) {
+                alert('Please fill in at least the token, name, and email fields.');
+                return;
+            }
+            
+            const targetUrl = new URL('http://localhost:8081/auth');
+            targetUrl.searchParams.set('token', token);
+            targetUrl.searchParams.set('name', name);
+            targetUrl.searchParams.set('email', email);
+            if (profile) targetUrl.searchParams.set('profile', profile);
+            targetUrl.searchParams.set('success', 'no');
+            
+            window.location.href = targetUrl.toString();
+        }
+        
+        function redirectToDashboard() {
+            const token = document.getElementById('tokenInput').value;
+            const name = document.getElementById('nameInput').value;
+            const email = document.getElementById('emailInput').value;
+            const profile = document.getElementById('profileInput').value;
+            
+            if (!token || !name || !email) {
+                alert('Please fill in at least the token, name, and email fields.');
+                return;
+            }
+            
+            const targetUrl = new URL('http://localhost:8081/auth');
+            targetUrl.searchParams.set('token', token);
+            targetUrl.searchParams.set('name', name);
+            targetUrl.searchParams.set('email', email);
+            if (profile) targetUrl.searchParams.set('profile', profile);
+            targetUrl.searchParams.set('success', 'yes');
+            
+            window.location.href = targetUrl.toString();
+        }
+    </script>
+</body>
+</html>

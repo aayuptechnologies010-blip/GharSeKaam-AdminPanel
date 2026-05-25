@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing OAuth - GharSeKro.com</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3rem;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 500px;
+            width: 90%;
+        }
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 24px;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .token-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        .redirect-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .redirect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🛒</div>
+        <h2>GharSeKro.com OAuth Processing</h2>
+        <div class="spinner"></div>
+        <p id="statusText">Extracting authentication token...</p>
+        
+        <div id="tokenSection" style="display: none;">
+            <div class="success">
+                <h3>✅ Token Extracted Successfully!</h3>
+                <p>Your temporary authentication token:</p>
+                <div id="tokenDisplay" class="token-display"></div>
+            </div>
+            <button class="redirect-btn" onclick="proceedToSetup()">
+                🚀 Continue to Shop Setup
+            </button>
+        </div>
+        
+        <div id="errorSection" style="display: none;">
+            <div class="error">
+                <h3>❌ Token Extraction Failed</h3>
+                <p id="errorMessage">Could not extract token from API response</p>
+            </div>
+            <button class="redirect-btn" onclick="goToAuth()">
+                🔄 Try Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function extractToken() {
+            try {
+                document.getElementById('statusText').textContent = 'Fetching token from API...';
+                
+                // Get the current URL which should be the API callback
+                const currentUrl = window.location.href;
+                console.log('Current URL:', currentUrl);
+                
+                // Check if we're on the API callback page
+                if (currentUrl.includes('build-mart-murex.vercel.app/api/v1/owner/auth/google/callback')) {
+                    document.getElementById('statusText').textContent = 'Reading API response...';
+                    
+                    // Try to extract JSON from the page content
+                    const pageText = document.body.innerText || document.body.textContent;
+                    console.log('Page content:', pageText);
+                    
+                    // Look for JSON pattern in the page
+                    const jsonMatch = pageText.match(/\{[^}]*"temptoken"[^}]*\}/);
+                    
+                    if (jsonMatch) {
+                        const jsonStr = jsonMatch[0];
+                        console.log('Found JSON:', jsonStr);
+                        
+                        const tokenData = JSON.parse(jsonStr);
+                        const tempToken = tokenData.temptoken;
+                        
+                        if (tempToken) {
+                            console.log('Extracted token:', tempToken);
+                            
+                            // Store the token and user data
+                            localStorage.setItem('tempAuthToken', tempToken);
+                            localStorage.setItem('tempUserName', 'Abhay Pandey');
+                            localStorage.setItem('tempUserEmail', 'robertsteeve789@gmail.com');
+                            localStorage.setItem('tempUserProfile', 'https://lh3.googleusercontent.com/a/ACg8ocIuN-QOmHeJdd44Ihn3fAZwNtSR18bi8xIyu0R6Y2Tkr0OxFyeS=s96-c');
+                            
+                            // Show success
+                            document.getElementById('tokenDisplay').textContent = tempToken;
+                            document.getElementById('tokenSection').style.display = 'block';
+                            document.querySelector('.spinner').style.display = 'none';
+                            document.getElementById('statusText').textContent = 'Ready to proceed!';
+                            
+                            // Auto-redirect after 3 seconds
+                            setTimeout(() => {
+                                proceedToSetup();
+                            }, 3000);
+                            
+                            return;
+                        }
+                    }
+                }
+                
+                // If we reach here, extraction failed
+                throw new Error('Could not find temptoken in API response');
+                
+            } catch (error) {
+                console.error('Token extraction error:', error);
+                document.getElementById('errorMessage').textContent = error.message;
+                document.getElementById('errorSection').style.display = 'block';
+                document.querySelector('.spinner').style.display = 'none';
+                document.getElementById('statusText').textContent = 'Extraction failed!';
+            }
+        }
+        
+        function proceedToSetup() {
+            const token = localStorage.getItem('tempAuthToken');
+            if (token) {
+                console.log('Redirecting to shop setup with token stored');
+                window.location.href = 'http://localhost:8081/setup';
+            } else {
+                alert('No token found in storage. Please try again.');
+            }
+        }
+        
+        function goToAuth() {
+            window.location.href = 'http://localhost:8081/auth';
+        }
+        
+        // Start the extraction process when page loads
+        window.onload = function() {
+            setTimeout(extractToken, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Save, Package, Plus, X } from "lucide-react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { itemService, categoryService } from "@/lib/api";
+
+// Variants interface matches AddItem.tsx
+interface Variant {
+  id: string;
+  size: string;
+  price: string;
+}
+
+const UNITS = ["PIECE", "KG", "LITRE", "GRAM", "PACK", "OTHER"];
+
+const EditItem = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { itemId } = useParams();
+  const location = useLocation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+
+  const [itemData, setItemData] = useState({
+    title: "",
+    description: "",
+    wholesaleprice: "",
+    retailprice: "",
+    unit: "PIECE",
+    currentQty: "",
+    warranty: "",
+    addons: "",
+    discount: "",
+    categoryId: "",
+    minimumPurchase: ""
+  });
+
+  // Manage variant rows separately (similar to AddItem)
+  const [variants, setVariants] = useState<Variant[]>([]);
+
+  useEffect(() => {
+    // Load item data from location state if available
+    if (location.state?.item) {
+      const item = location.state.item;
+      setItemData({
+        title: item.title || "",
+        description: item.description || "",
+        wholesaleprice: item.wholesaleprice || "",
+        retailprice: item.retailprice || "",
+        unit: item.unit || "PIECE",
+        currentQty: item.currentQty?.toString() || "",
+        warranty: item.warranty || "",
+        addons: Array.isArray(item.addons) ? item.addons.join(", ") : (item.addons || ""),
+        discount: item.discount?.toString() || "",
+        categoryId: item.categoryId || "",
+        minimumPurchase: item.minimumPurchase?.toString() || ""
+      });
+
+      // initialize variants array if present
+      if (item.variants) {
+        try {
+          const parsed = typeof item.variants === "string" ? JSON.parse(item.variants) : item.variants;
+          if (Array.isArray(parsed)) {
+            setVariants(parsed.map((v: any) => ({
+              id: Date.now().toString() + Math.random(),
+              size: v.size || "",
+              price: v.price?.toString() || ""
+            })));
+          }
+        } catch (e) {
+          console.warn("Unable to parse item variants", e);
+        }
+      }
+    }
+
+    // Load categories
+    fetchCategories();
+  }, [location.state]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await categoryService.getCategories();
+      if (response.success && response.categories) {
+        setCategories(response.categories);
+      }
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!itemId) {
+      toast({
+        title: "Error",
+        description: "Item ID is missing",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // prepare payload with variants string if present
+      const payload = { ...itemData } as any;
+      if (variants.length > 0) {
+        payload.variants = JSON.stringify(
+          variants.map(v => ({ size: v.size, price: parseFloat(v.price) }))
+        );
+      }
+
+      const response = await (itemService as any).updateItem(itemId, payload);
+      console.log("Update item response:", response);
+
+      if (response.success) {
+        toast({
+          title: "Item Updated!",
+          description: `${itemData.title} has been updated successfully.`,
+        });
+
+        navigate("/inventory/items");
+      } else {
+        throw new Error(response.message || "Failed to update item");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update item. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/inventory/items")}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Items
+        </Button>
+      </div>
+
+      <div className="max-w-4xl mx-auto">
+        <Card className="shadow-admin-lg border-0">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                <Package className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl">Edit Item</CardTitle>
+                <p className="text-muted-foreground mt-1">
+                  Update item details and inventory information
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Item Title *</Label>
+                  <Input
+                    id="title"
+                    placeholder="Enter item title"
+                    value={itemData.title}
+                    onChange={(e) => setItemData(prev => ({ ...prev, title: e.target.value }))}
+                    required
+                    className="shadow-admin-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category *</Label>
+                  <Select
+                    value={itemData.categoryId}
+                    onValueChange={(value) => setItemData(prev => ({ ...prev, categoryId: value }))}
+                  >
+                    <SelectTrigger className="shadow-admin-sm">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category: any) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="wholesaleprice">Wholesale Price *</Label>
+                  <Input
+                    id="wholesaleprice"
+                    type="number"
+                    step="0.01"
+                    placeholder="Enter wholesale price"
+                    value={itemData.wholesaleprice}
+                    onChange={(e) => setItemData(prev => ({ ...prev, wholesaleprice: e.target.value }))}
+                    required
+                    className="shadow-admin-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="retailprice">Retail Price *</Label>
+                  <Input
+                    id="retailprice"
+                    type="number"
+                    step="0.01"
+                    placeholder="Enter retail price"
+                    value={itemData.retailprice}
+                    onChange={(e) => setItemData(prev => ({ ...prev, retailprice: e.target.value }))}
+                    required
+                    className="shadow-admin-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="unit">Unit *</Label>
+                  <Select
+                    value={itemData.unit}
+                    onValueChange={(value) => setItemData(prev => ({ ...prev, unit: value }))}
+                  >
+                    <SelectTrigger className="shadow-admin-sm">
+                      <SelectValue placeholder="Select unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {UNITS.map((unit) => (
+                        <SelectItem key={unit} value={unit}>
+                          {unit}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="currentQty">Current Quantity *</Label>
+                  <Input
+                    id="currentQty"
+                    type="number"
+                    placeholder="Enter current quantity"
+                    value={itemData.currentQty}
+                    onChange={(e) => setItemData(prev => ({ ...prev, currentQty: e.target.value }))}
+                    required
+                    className="shadow-admin-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="warranty">Warranty</Label>
+                  <Input
+                    id="warranty"
+                    placeholder="e.g., 6 months"
+                    value={itemData.warranty}
+                    onChange={(e) => setItemData(prev => ({ ...prev, warranty: e.target.value }))}
+                    className="shadow-admin-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="discount">Discount (%)</Label>
+                  <Input
+                    id="discount"
+                    type="number"
+                    step="0.1"
+                    placeholder="Enter discount percentage"
+                    value={itemData.discount}
+                    onChange={(e) => setItemData(prev => ({ ...prev, discount: e.target.value }))}
+                    className="shadow-admin-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="addons">Add-ons</Label>
+                  <Input
+                    id="addons"
+                    placeholder="e.g., cup, spoon (comma separated)"
+                    value={itemData.addons}
+                    onChange={(e) => setItemData(prev => ({ ...prev, addons: e.target.value }))}
+                    className="shadow-admin-sm"
+                  />
+                </div>
+
+              {/* Variants section added */}
+              <div className="space-y-4 p-4 bg-muted/40 rounded-lg border border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-base">Variants (Optional)</Label>
+                    {variants.length > 0 && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {variants.length} variant{variants.length !== 1 ? 's' : ''} loaded
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {variants.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-2">No variants added yet</p>
+                ) : (
+                  <div className="space-y-3">
+                    {variants.map((v) => (
+                      <div key={v.id} className="flex gap-2 items-center bg-background p-3 rounded-md border">
+                        <div className="flex-1">
+                          <Label className="text-xs text-muted-foreground">Size</Label>
+                          <Input
+                            placeholder="e.g., S, M, L, XL"
+                            value={v.size}
+                            onChange={(e) =>
+                              setVariants(prev =>
+                                prev.map(x => x.id === v.id ? { ...x, size: e.target.value } : x)
+                              )
+                            }
+                            className="shadow-admin-sm mt-1"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Label className="text-xs text-muted-foreground">Price</Label>
+                          <Input
+                            placeholder="0.00"
+                            type="number"
+                            step="0.01"
+                            value={v.price}
+                            onChange={(e) =>
+                              setVariants(prev =>
+                                prev.map(x => x.id === v.id ? { ...x, price: e.target.value } : x)
+                              )
+                            }
+                            className="shadow-admin-sm mt-1"
+                          />
+                        </div>
+                        <Button
+                          variant="destructive"
+                          className="p-2 h-10"
+                          onClick={() => setVariants(prev => prev.filter(x => x.id !== v.id))}
+                          type="button"
+                          title="Remove variant"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 w-full"
+                  onClick={() => setVariants(prev => [...prev, { id: Date.now().toString(), size: "", price: "" }])}
+                  type="button"
+                >
+                  <Plus className="h-4 w-4" /> Add New Variant
+                </Button>
+              </div>
+
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Enter item description"
+                  value={itemData.description}
+                  onChange={(e) => setItemData(prev => ({ ...prev, description: e.target.value }))}
+                  className="shadow-admin-sm"
+                  rows={4}
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <Button
+                  type="submit"
+                  className="bg-gradient-primary hover:opacity-90"
+                  disabled={isLoading}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {isLoading ? "Updating..." : "Update Item"}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate("/inventory/items")}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default EditItem;
