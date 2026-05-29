@@ -224,8 +224,12 @@ const Categories = () => {
                         />
                       </div>
                     ) : (
-                      <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center border border-slate-200">
-                        <FolderOpen className="h-5 w-5 text-slate-400" />
+                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/60 flex items-center justify-center shadow-sm">
+                        <img
+                          src="https://images.unsplash.com/photo-1581094751156-df591244e8ecc?q=80&w=300&auto=format&fit=crop"
+                          alt={category.title || category.name}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     )}
                   </TableCell>

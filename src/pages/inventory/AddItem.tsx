@@ -40,6 +40,7 @@ const AddItem = () => {
 
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageUrlInput, setImageUrlInput] = useState("");
   const [variants, setVariants] = useState<Variant[]>([]);
 
   // Unit options as per API enum
@@ -93,6 +94,15 @@ const AddItem = () => {
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
+  const addImageFromUrl = () => {
+    const url = imageUrlInput.trim();
+    if (!url) return;
+    setImagePreviews(prev => [...prev, url]);
+    // Push a dummy marker so selectedImages count stays in sync
+    setSelectedImages(prev => [...prev, new File([], "__url__") as File]);
+    setImageUrlInput("");
+  };
+
   const addVariant = () => {
     setVariants(prev => [...prev, { id: Date.now().toString(), size: "", price: "" }]);
   };
@@ -123,6 +133,9 @@ const AddItem = () => {
 
     try {
       // Prepare item data for API
+      // Filter out URL-only entries; pass real files + url strings separately
+      const realFiles = selectedImages.filter(f => f.name !== "__url__");
+      const urlImages = imagePreviews.filter((_, i) => selectedImages[i]?.name === "__url__");
       const apiItemData = {
         title: itemData.title,
         description: itemData.description,
@@ -137,7 +150,8 @@ const AddItem = () => {
         discount: parseFloat(itemData.discount),
         minimumPurchase: parseInt(itemData.minimumPurchase),
         variants: variants.length > 0 ? JSON.stringify(variants.map(v => ({ size: v.size, price: parseFloat(v.price) }))) : null,
-        images: selectedImages
+        images: realFiles,
+        imageUrls: urlImages
       };
       console.log("Submitting new item:", apiItemData);
 
@@ -220,6 +234,20 @@ const AddItem = () => {
                   >
                     <Upload className="h-4 w-4 mr-2" />
                     Choose Images
+                  </Button>
+                </div>
+
+                {/* Online Image URL Input */}
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    placeholder="Ya online image URL paste karo (https://...)"
+                    value={imageUrlInput}
+                    onChange={(e) => setImageUrlInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addImageFromUrl())}
+                    className="shadow-admin-sm"
+                  />
+                  <Button type="button" variant="outline" onClick={addImageFromUrl}>
+                    <Plus className="h-4 w-4 mr-1" /> Add URL
                   </Button>
                 </div>
 

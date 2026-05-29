@@ -21,6 +21,7 @@ const AddCategory = () => {
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageUrlInput, setImageUrlInput] = useState("");
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,6 +41,14 @@ const AddCategory = () => {
     setImagePreview(null);
   };
 
+  const addImageFromUrl = () => {
+    const url = imageUrlInput.trim();
+    if (!url) return;
+    setImagePreview(url);
+    setSelectedImage(new File([], "__url__"));
+    setImageUrlInput("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -56,7 +65,11 @@ const AddCategory = () => {
 
     try {
       // Call the API using the service
-      const response = await categoryService.addCategory(categoryData.title, selectedImage);
+      // If image is a URL-only marker, pass the URL string directly
+      const isUrlImage = selectedImage?.name === "__url__";
+      const response = isUrlImage
+        ? await (categoryService as any).addCategory(categoryData.title, null, imagePreview)
+        : await categoryService.addCategory(categoryData.title, selectedImage, null);
 
       if (response.success) {
         toast({
@@ -160,6 +173,20 @@ const AddCategory = () => {
                       <Upload className="h-4 w-4 mr-2" />
                       Choose Image
                     </Button>
+
+                    {/* Online Image URL Input */}
+                    <div className="flex gap-2 mt-4">
+                      <Input
+                        placeholder="Ya online image URL paste karo (https://...)"
+                        value={imageUrlInput}
+                        onChange={(e) => setImageUrlInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addImageFromUrl())}
+                        className="shadow-admin-sm text-left"
+                      />
+                      <Button type="button" variant="outline" onClick={addImageFromUrl}>
+                        Add URL
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="relative">

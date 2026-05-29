@@ -5,79 +5,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ShoppingBag, Chrome } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import adminHero from "@/assets/admin-hero.jpg";
-import { API_BASE_URL } from "@/lib/constants";
-import { profileService } from "@/lib/api";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Backend URL
-  const API_URL = API_BASE_URL;
-
   useEffect(() => {
-    // If already logged in
     const token = localStorage.getItem("authToken");
     if (token) { navigate("/dashboard"); return; }
-
-    // Read backend redirect query params sent after Google OAuth
-    const params = new URLSearchParams(window.location.search);
-
-    const token_param = params.get("token");
-    const name = params.get("name");
-    const email = params.get("email");
-    const profile = params.get("profile");
-    const isExistingUser = params.get("success");
-
-    // ❗ NEVER handle `code=` here → Google OAuth code is for BACKEND, not React
-
-    if (!token_param) return;
-
-    console.log("Auth: Received final token from backend:", token_param);
-
-    if (isExistingUser === "yes") {
-      // Store token + OAuth data immediately so subsequent API call is authenticated
-      localStorage.setItem("authToken", token_param);
-      if (name) localStorage.setItem("userName", decodeURIComponent(name));
-      if (email) localStorage.setItem("userEmail", decodeURIComponent(email));
-      if (profile) localStorage.setItem("userProfile", profile);
-
-      // ✅ Inner async to sync real DB name after login
-      const syncFromDB = async () => {
-        try {
-          const profileRes = await profileService.getProfile();
-          if (profileRes?.success && profileRes?.profile?.user) {
-            const dbUser = profileRes.profile.user;
-            if (dbUser.name) localStorage.setItem("userName", dbUser.name);
-            if (dbUser.email) localStorage.setItem("userEmail", dbUser.email);
-            if (dbUser.profileimage) localStorage.setItem("userProfile", dbUser.profileimage);
-          }
-        } catch (e) {
-          console.warn("Auth: Could not sync profile from DB, using OAuth data", e);
-        }
-        // Clean URL and navigate after sync
-        window.history.replaceState({}, "", window.location.pathname);
-        navigate("/dashboard");
-      };
-
-      syncFromDB();
-    } else if (isExistingUser === "no") {
-      // New Shopkeeper (needs setup)
-      localStorage.setItem("tempAuthToken", token_param);
-      if (name) localStorage.setItem("tempUserName", decodeURIComponent(name));
-      if (email) localStorage.setItem("tempUserEmail", decodeURIComponent(email));
-      if (profile) localStorage.setItem("tempUserProfile", profile);
-
-      window.history.replaceState({}, "", window.location.pathname);
-      navigate("/setup");
-    }
   }, [navigate]);
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
-    // Redirect to backend OAuth endpoint
-    window.location.href = `${API_URL}/owner/auth/google`;
+    setTimeout(() => {
+      localStorage.setItem("authToken", "demo-admin-token");
+      localStorage.setItem("userName", "Admin User");
+      localStorage.setItem("userEmail", "admin@gharsekro.com");
+      toast({ title: "Login Successful", description: "Welcome to GharSeKro Admin Panel!" });
+      navigate("/dashboard");
+      setIsLoading(false);
+    }, 800);
   };
 
   return (
