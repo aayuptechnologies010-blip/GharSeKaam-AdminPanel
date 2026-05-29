@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Chrome, Loader2, AlertCircle } from "lucide-react";
+import { Chrome, Loader2, AlertCircle, Package, ShoppingCart, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import adminHero from "@/assets/admin-hero.jpg";
 
@@ -57,33 +57,55 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#131921] via-[#1a2535] to-[#232f3e] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#0c1017] via-[#131921] to-[#1f2937] flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
         {/* Hero Section */}
         <div className="hidden lg:block">
-          <div className="relative overflow-hidden rounded-3xl shadow-2xl animate-fade-in">
+          <div className="relative overflow-hidden rounded-3xl shadow-2xl animate-fade-in group">
             <img
               src={adminHero}
               alt="GharSeKro.in Admin Dashboard"
-              className="w-full h-[600px] object-cover"
+              className="w-full h-[600px] object-cover transition-transform duration-700 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-[#232f3e]/88 backdrop-blur-[3px] flex items-center justify-center">
-              <div className="text-center text-white p-8 space-y-5">
+            {/* Darker premium radial overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0c1017]/95 via-[#131921]/80 to-[#1f2937]/50 flex items-center justify-center p-6">
+              {/* Floating Glassmorphic Card */}
+              <div className="w-full max-w-md bg-slate-950/65 backdrop-blur-lg border border-white/10 rounded-3xl p-8 text-center shadow-2xl relative space-y-6">
+                {/* Glowing top element */}
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-32 h-[2px] bg-gradient-to-r from-transparent via-[#febd69] to-transparent shadow-[0_0_8px_#febd69]" />
+                
+                {/* Logo with clean soft-shadow wrapper */}
                 <div className="flex items-center justify-center">
-                  <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center p-3 shadow-2xl border border-white/20">
+                  <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center p-3.5 shadow-2xl border border-white/20 relative group-hover:scale-105 transition-transform">
                     <img src="/logo.png" alt="GharSeKro Logo" className="w-full h-full object-contain" />
                   </div>
                 </div>
-                <h1 className="text-4xl font-black tracking-tight">GharSeKro.in</h1>
-                <p className="text-[#febd69] font-black text-sm uppercase tracking-widest">Admin Portal</p>
-                <p className="text-slate-300 text-base max-w-sm mx-auto font-medium leading-relaxed">
-                  Manage your store inventory, orders, and categories with ease
+
+                <div className="space-y-2">
+                  <h1 className="text-4xl font-extrabold tracking-tight text-white bg-gradient-to-b from-white to-slate-200 bg-clip-text">
+                    GharSeKro.in
+                  </h1>
+                  <div className="inline-flex items-center justify-center bg-amber-500/10 text-[#febd69] border border-amber-500/20 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-widest shadow-sm">
+                    Admin Portal
+                  </div>
+                </div>
+
+                <p className="text-slate-300 text-sm max-w-xs mx-auto font-medium leading-relaxed">
+                  Manage your store inventory, orders, and categories with absolute ease.
                 </p>
-                <div className="flex items-center justify-center gap-6 pt-4">
-                  {[["Inventory", "📦"], ["Orders", "🛒"], ["Analytics", "📊"]].map(([label, icon]) => (
-                    <div key={label} className="flex flex-col items-center gap-1">
-                      <span className="text-2xl">{icon}</span>
-                      <span className="text-xs text-slate-400 font-semibold">{label}</span>
+
+                {/* Upgraded beautiful Lucide feature badges instead of emojis */}
+                <div className="flex items-center justify-center gap-6 pt-4 border-t border-white/5">
+                  {[
+                    { label: "Inventory", icon: Package, color: "text-amber-400 bg-amber-400/10 border-amber-400/20" },
+                    { label: "Orders", icon: ShoppingCart, color: "text-blue-400 bg-blue-400/10 border-blue-400/20" },
+                    { label: "Analytics", icon: BarChart3, color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" }
+                  ].map(({ label, icon: Icon, color }) => (
+                    <div key={label} className="flex flex-col items-center gap-2">
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${color} shadow-sm transition-all duration-300 hover:scale-110`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">{label}</span>
                     </div>
                   ))}
                 </div>
