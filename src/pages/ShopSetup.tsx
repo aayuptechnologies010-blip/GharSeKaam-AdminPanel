@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShoppingBag, Store, MapPin, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { API_BASE_URL } from "@/lib/constants";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
 const ShopSetup = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ const ShopSetup = () => {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('tempAuthToken');
+      const token = localStorage.getItem('authToken');
       console.log('ShopSetup: Starting shop setup with token:', token ? 'Present' : 'Missing');
 
       if (!token) {

@@ -14,7 +14,9 @@ import {
   Layers,
   Settings,
   GalleryHorizontal,
-  Users
+  Users,
+  HardHat,
+  Warehouse
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -74,6 +76,18 @@ const menuItems = [
     icon: GalleryHorizontal,
     color: "from-yellow-500 to-yellow-600"
   },
+  {
+    title: "Wholesale Settings",
+    url: "/wholesale-settings",
+    icon: Warehouse,
+    color: "from-emerald-500 to-teal-600"
+  },
+  {
+    title: "Labour Services",
+    url: "/labour-services",
+    icon: HardHat,
+    color: "from-amber-500 to-orange-600"
+  },
 ];
 
 export function AdminSidebar() {
@@ -95,7 +109,7 @@ export function AdminSidebar() {
 
   return (
     <div className={cn(
-      "relative h-screen bg-white border-r border-slate-200 transition-all duration-300 ease-in-out shadow-lg",
+      "relative h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out shadow-lg text-sidebar-foreground",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Background Pattern */}
@@ -106,29 +120,29 @@ export function AdminSidebar() {
         variant="ghost"
         size="sm"
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-6 z-10 h-6 w-6 rounded-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-600 shadow-lg"
+        className="absolute -right-3 top-6 z-10 h-6 w-6 rounded-full bg-sidebar-accent border border-sidebar-border hover:bg-sidebar-accent/80 text-sidebar-foreground shadow-lg"
       >
         {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
       </Button>
 
       <div className="relative z-10 flex flex-col h-full">
         {/* Logo/Brand */}
-        <div className="p-6 border-b border-slate-200">
+        <div className="p-6 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shrink-0 shadow-sm border bg-slate-50">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shrink-0 shadow-sm border bg-white p-1">
               <img src="/logo.png" alt="GharSeKro logo" className="w-full h-full object-contain" />
             </div>
             {!collapsed && (
               <div className="flex flex-col">
-                <h2 className="font-extrabold text-slate-800 text-base leading-tight tracking-tight">GharSeKro</h2>
-                <span className="text-[10px] text-amber-500 font-bold uppercase tracking-wider">Admin Portal</span>
+                <h2 className="font-extrabold text-white text-base leading-tight tracking-tight">GharSeKro</h2>
+                <span className="text-[10px] text-[#febd69] font-black uppercase tracking-wider">Admin Portal</span>
               </div>
             )}
           </div>
         </div>
 
         {/* Navigation Menu */}
-        <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <div className="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar">
           {menuItems.map((item) => {
             if (item.items) {
               // Group with sub-items
@@ -137,8 +151,8 @@ export function AdminSidebar() {
                   <button
                     onClick={() => !collapsed && toggleGroup(item.title)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group",
-                      "hover:bg-slate-100 text-slate-600 hover:text-slate-800"
+                      "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group border border-transparent",
+                      "hover:bg-sidebar-accent/60 text-sidebar-foreground hover:text-[#febd69]"
                     )}
                   >
                     <div className={cn(
@@ -159,28 +173,28 @@ export function AdminSidebar() {
                   </button>
 
                   {!collapsed && isGroupExpanded(item.title) && (
-                    <div className="ml-4 space-y-1 border-l border-slate-200 pl-4">
+                    <div className="ml-4 space-y-1 border-l border-sidebar-border pl-4">
                       {item.items.map((subItem) => (
                         <NavLink
                           key={subItem.title}
                           to={subItem.url}
                           className={cn(
-                            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group border border-transparent",
                             isActive(subItem.url)
-                              ? "bg-gradient-to-r from-blue-50 to-purple-50 text-slate-800 border border-blue-200"
-                              : "text-slate-600 hover:text-slate-800 hover:bg-slate-50"
+                              ? "bg-sidebar-accent text-[#febd69] border-sidebar-border shadow-md"
+                              : "text-sidebar-foreground hover:text-[#febd69] hover:bg-sidebar-accent/40"
                           )}
                         >
                           <div className={cn(
                             "w-6 h-6 rounded-md flex items-center justify-center bg-gradient-to-br shadow-sm",
                             subItem.color,
-                            isActive(subItem.url) ? "shadow-lg" : "opacity-70"
+                            isActive(subItem.url) ? "shadow-lg scale-105" : "opacity-80"
                           )}>
                             <subItem.icon className="h-3 w-3 text-white" />
                           </div>
                           <span className="font-medium text-sm">{subItem.title}</span>
                           {isActive(subItem.url) && (
-                            <div className="ml-auto w-2 h-2 bg-blue-500 rounded-full" />
+                            <div className="ml-auto w-2 h-2 bg-primary rounded-full shadow shadow-primary animate-pulse" />
                           )}
                         </NavLink>
                       ))}
@@ -195,10 +209,10 @@ export function AdminSidebar() {
                   key={item.title}
                   to={item.url}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group",
+                    "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group border border-transparent",
                     isActive(item.url)
-                      ? "bg-gradient-to-r from-blue-50 to-purple-50 text-slate-800 border border-blue-200 shadow-lg"
-                      : "text-slate-600 hover:text-slate-800 hover:bg-slate-100"
+                      ? "bg-sidebar-accent text-[#febd69] border-sidebar-border shadow-md"
+                      : "text-sidebar-foreground hover:text-[#febd69] hover:bg-sidebar-accent/40"
                   )}
                 >
                   <div className={cn(
@@ -212,7 +226,7 @@ export function AdminSidebar() {
                     <>
                       <span className="font-medium">{item.title}</span>
                       {isActive(item.url) && (
-                        <div className="ml-auto w-2 h-2 bg-blue-500 rounded-full" />
+                        <div className="ml-auto w-2 h-2 bg-primary rounded-full shadow shadow-primary animate-pulse" />
                       )}
                     </>
                   )}
@@ -224,13 +238,13 @@ export function AdminSidebar() {
 
         {/* Footer */}
         {!collapsed && (
-          <div className="p-4 border-t border-slate-200">
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-3">
-              <div className="flex items-center gap-2 text-blue-600 mb-1">
+          <div className="p-4 border-t border-sidebar-border">
+            <div className="bg-sidebar-accent/60 border border-sidebar-border rounded-xl p-3">
+              <div className="flex items-center gap-2 text-[#febd69] mb-1">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <span className="text-xs font-medium">Store Active</span>
+                <span className="text-xs font-black">Store Active</span>
               </div>
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-slate-300 font-semibold leading-relaxed">
                 Your store is live and ready for customers
               </p>
             </div>

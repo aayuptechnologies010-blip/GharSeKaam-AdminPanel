@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Trash2, Edit2, X, Check, ImageIcon, AlertCircle } from 'lucide-react';
-import { API_BASE_URL, API_ENDPOINTS, getAuthHeaders } from "../../lib/constants";
+import { shopService } from "@/lib/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
@@ -32,12 +32,7 @@ export default function ShopImageManager() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.GET_SHOP_IMAGES}`, {
-        headers: {
-          ...getAuthHeaders(),
-        },
-      });
-      const data = await response.json();
+      const data = await shopService.getShopImages();
       
       if (data.success) {
         setImages(data.images || []);
@@ -69,23 +64,9 @@ export default function ShopImageManager() {
       setUploading(true);
       setError(null);
       
-      const formData = new FormData();
-      formData.append('image', newImage);
-      if (newDescription) {
-        formData.append('description', newDescription);
-      }
-
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADD_SHOP_IMAGE}`, {
-        method: 'POST',
-        headers: {
-          ...getAuthHeaders(),
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
+      const data = await shopService.addShopImage(newImage, newDescription);
       
-      if (data.success) {
+      if (data.success && data.shopImage) {
         setImages([data.shopImage, ...images]);
         setNewImage(null);
         setNewDescription('');
@@ -101,29 +82,12 @@ export default function ShopImageManager() {
     }
   };
 
-  const handleUpdate = async (id: string, file?: File) => {
+  const handleUpdate = async (id: string) => {
     try {
       setError(null);
-      const formData = new FormData();
+      const data = await shopService.updateShopImage(id, editDescription);
       
-      if (file) {
-        formData.append('image', file);
-      }
-      if (editDescription !== undefined) {
-        formData.append('description', editDescription);
-      }
-
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADD_SHOP_IMAGE}/${id}`, {
-        method: 'PUT',
-        headers: {
-          ...getAuthHeaders(),
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
+      if (data.success && data.updated) {
         setImages(images.map(img => img.id === id ? data.updated : img));
         setEditingId(null);
         setEditDescription('');
@@ -141,14 +105,7 @@ export default function ShopImageManager() {
 
     try {
       setError(null);
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.ADD_SHOP_IMAGE}/${id}`, {
-        method: 'DELETE',
-        headers: {
-          ...getAuthHeaders(),
-        },
-      });
-
-      const data = await response.json();
+      const data = await shopService.deleteShopImage(id);
       
       if (data.success) {
         setImages(images.filter(img => img.id !== id));

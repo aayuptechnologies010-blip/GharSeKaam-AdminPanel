@@ -88,6 +88,15 @@ const Dashboard = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Revenue analytics states
+  const [revenueStats, setRevenueStats] = useState({
+    totalRevenue: 0,
+    grossSales: 0,
+    codRevenue: 0,
+    cashRevenue: 0
+  });
+  const [monthlyRevenueData, setMonthlyRevenueData] = useState<any[]>([]);
+
   // Baseline dummy data to fall back on if store is empty
   const defaultSalesTrend = [
     { name: "Mon", Sales: 0, Orders: 0 },
@@ -219,6 +228,68 @@ const Dashboard = () => {
           }
           
           setSalesTrend(trendData);
+
+          // Compute Revenue Stats
+          let totalDeliveredRevenue = 0;
+          let grossSales = 0;
+          let codRevenue = 0;
+          let cashRevenue = 0;
+
+          allOrders.forEach((o: any) => {
+            const price = parseFloat(o.totalPrice || 0);
+            grossSales += price;
+            
+            const statusLower = (o.status || "").toLowerCase();
+            const isDelivered = statusLower === "delivered";
+            if (isDelivered) {
+              totalDeliveredRevenue += price;
+            }
+
+            const isCod = o.paymentType === "COD";
+            const isCash = o.paymentType === "CASH";
+
+            if (isCod) {
+              codRevenue += price;
+            } else if (isCash) {
+              cashRevenue += price;
+            }
+          });
+
+          setRevenueStats({
+            totalRevenue: Math.round(totalDeliveredRevenue),
+            grossSales: Math.round(grossSales),
+            codRevenue: Math.round(codRevenue),
+            cashRevenue: Math.round(cashRevenue)
+          });
+
+          // Compute Monthly Revenue Trends
+          const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          const monthlyMap: { [key: string]: number } = {};
+          
+          // Initialize last 6 months
+          for (let i = 5; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            monthlyMap[monthNames[d.getMonth()]] = 0;
+          }
+
+          allOrders.forEach((o: any) => {
+            const date = new Date(o.createdAt);
+            const mName = monthNames[date.getMonth()];
+            if (monthlyMap[mName] !== undefined) {
+              const statusLower = (o.status || "").toLowerCase();
+              if (statusLower !== "cancelled" && statusLower !== "cancel" && statusLower !== "rejected" && statusLower !== "reject") {
+                monthlyMap[mName] += parseFloat(o.totalPrice || 0);
+              }
+            }
+          });
+
+          const monthlyTrend = Object.entries(monthlyMap).map(([name, revenue]) => ({
+            name,
+            Revenue: Math.round(revenue)
+          }));
+
+          setMonthlyRevenueData(monthlyTrend);
         }
       } else {
         throw new Error("Failed to load core dashboard stats. Please check backend connection.");
@@ -372,6 +443,86 @@ const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Financial Insights & Revenue Analytics ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Revenue Stats summary */}
+        <Card className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden flex flex-col justify-between">
+          <div className="h-1 bg-gradient-to-r from-blue-600 to-indigo-700" />
+          <CardHeader className="border-b border-slate-100 pb-4">
+            <CardTitle className="text-lg font-black text-slate-800 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-emerald-500" />
+              Financial Breakdown
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-5 flex-1 flex flex-col justify-center">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Realized Revenue (Delivered)</span>
+              <p className="text-3xl font-black text-emerald-600">₹{revenueStats.totalRevenue.toLocaleString()}</p>
+            </div>
+            
+            <div className="border-t border-slate-100 pt-4 grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Gross Sales</span>
+                <p className="font-extrabold text-slate-800 text-sm">₹{revenueStats.grossSales.toLocaleString()}</p>
+              </div>
+              <div>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">B2B & Retail Cash</span>
+                <p className="font-extrabold text-slate-800 text-sm">₹{revenueStats.cashRevenue.toLocaleString()}</p>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-100 pt-4 space-y-2">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Payment Method Split</span>
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-semibold text-slate-500 flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 bg-blue-500 rounded-full" /> COD (Home Delivery)
+                </span>
+                <span className="font-bold text-slate-800">₹{revenueStats.codRevenue.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-semibold text-slate-500 flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 bg-amber-500 rounded-full" /> Cash Payments
+                </span>
+                <span className="font-bold text-slate-800">₹{revenueStats.cashRevenue.toLocaleString()}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Monthly Revenue Bar Chart */}
+        <Card className="lg:col-span-2 bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-700" />
+          <CardHeader className="border-b border-slate-100 flex flex-row items-center justify-between py-4">
+            <CardTitle className="text-lg font-black text-slate-800 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-amber-500" />
+              Monthly Revenue Performance
+            </CardTitle>
+            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 border text-[10px] font-bold">
+              Delivered & Active
+            </Badge>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="h-[210px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyRevenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", fontSize: "12px", fontFamily: "sans-serif" }}
+                  />
+                  <Bar dataKey="Revenue" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={45}>
+                    {monthlyRevenueData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={index % 2 === 0 ? "#10b981" : "#059669"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* ── Animated Analytics Charts Section ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

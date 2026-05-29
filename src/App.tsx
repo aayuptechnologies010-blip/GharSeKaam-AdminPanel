@@ -21,6 +21,8 @@ import ErrorPage from "./pages/ErrorPage";
 import ShopImageManager from "./pages/inventory/UploadShopImg";
 import Customers from "./pages/Customers";
 import Profile from "./pages/Profile";
+import LabourServices from "./pages/LabourServices";
+import WholesaleSettings from "./pages/WholesaleSettings";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +57,8 @@ const App = () => (
             <Route path="customers" element={<Customers />} />
             <Route path="inventory/upload-shop-image" element={<ShopImageManager/>} />
             <Route path="profile" element={<Profile />} />
+            <Route path="labour-services" element={<LabourServices />} />
+            <Route path="wholesale-settings" element={<WholesaleSettings />} />
           </Route>
 
           {/* Catch-all route */}
