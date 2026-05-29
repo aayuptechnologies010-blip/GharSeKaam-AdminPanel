@@ -498,11 +498,9 @@ const Orders = () => {
                                 {isUpdating === order.id ? "Rejecting..." : "Reject"}
                               </Button>
                             </>
-                          )}
-
-                          {!isFinalStatus(order.status) && ["ACCEPT", "ACCEPTED", "DELIVERY-PICKUP", "DELIVERED"].includes(order.status) && (
+                          )}                          {!isFinalStatus(order.status) && ["ACCEPT", "ACCEPTED", "DELIVERY-PICKUP", "DELIVERED"].includes(order.status) && (
                             <Select
-                              value={order.status.toLowerCase()}
+                              value={order.status.toLowerCase() === "accept" ? "accepted" : order.status.toLowerCase()}
                               onValueChange={(newStatus) => handleStatusUpdate(order.id, newStatus)}
                               disabled={isUpdating === order.id}
                             >
@@ -510,9 +508,10 @@ const Orders = () => {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
+                                <SelectItem value="accepted">Accepted</SelectItem>
+                                <SelectItem value="delivery-pickup">Out for Delivery</SelectItem>
+                                <SelectItem value="delivered">Completed / Delivered</SelectItem>
                                 <SelectItem value="cancel">Cancel Order</SelectItem>
-                                <SelectItem value="delivery-pickup">Set: Out for Delivery</SelectItem>
-                                <SelectItem value="delivered">Set: Completed</SelectItem>
                               </SelectContent>
                             </Select>
                           )}
