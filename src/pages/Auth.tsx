@@ -1,91 +1,93 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Chrome, Loader2, AlertCircle, Package, ShoppingCart, BarChart3 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, AlertCircle, Package, ShoppingCart, BarChart3, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import adminHero from "@/assets/admin-hero.jpg";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+// Demo admin credentials - change these as needed
+const ADMIN_CREDENTIALS = [
+  { email: "admin@gharsekro.com", password: "admin123", name: "Admin User" },
+  { email: "owner@gharsekro.com", password: "owner123", name: "Store Owner" },
+];
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    // Already logged in? Go to dashboard
     const token = localStorage.getItem("authToken");
-    if (token) {
-      navigate("/dashboard");
+    if (token) navigate("/dashboard");
+  }, [navigate]);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter both email and password.");
       return;
     }
 
-    // Handle OAuth callback: ?token=xxx&success=yes&name=xxx&email=xxx
-    const token_param = searchParams.get("token");
-    const success = searchParams.get("success");
-    const name = searchParams.get("name");
-    const email = searchParams.get("email");
-
-    if (token_param) {
-      if (success === "yes") {
-        localStorage.setItem("authToken", token_param);
-        if (name) localStorage.setItem("userName", decodeURIComponent(name));
-        if (email) localStorage.setItem("userEmail", decodeURIComponent(email));
-        toast({ title: "Login Successful", description: `Welcome back, ${name || "Admin"}!` });
-        navigate("/dashboard");
-      } else if (success === "no") {
-        // New user, needs shop setup
-        localStorage.setItem("authToken", token_param);
-        if (name) localStorage.setItem("userName", decodeURIComponent(name));
-        if (email) localStorage.setItem("userEmail", decodeURIComponent(email));
-        toast({ title: "Setup Required", description: "Please complete your shop setup." });
-        navigate("/setup");
-      } else {
-        setError("Authentication failed. Please try again.");
-      }
-    }
-  }, [navigate, searchParams]);
-
-  const handleGoogleLogin = () => {
     setIsLoading(true);
-    setError(null);
-    // Redirect to backend Google OAuth
-    window.location.href = `${API_BASE}/owner/auth/google`;
+
+    setTimeout(() => {
+      const match = ADMIN_CREDENTIALS.find(
+        (c) => c.email === email.trim().toLowerCase() && c.password === password
+      );
+
+      if (match) {
+        localStorage.setItem("authToken", "demo-admin-token-" + Date.now());
+        localStorage.setItem("userName", match.name);
+        localStorage.setItem("userEmail", match.email);
+        localStorage.setItem("adminPassword", match.password);
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${match.name}!`,
+        });
+        navigate("/dashboard");
+      } else {
+        setError("Invalid email or password. Please try again.");
+      }
+
+      setIsLoading(false);
+    }, 700);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0c1017] via-[#131921] to-[#1f2937] flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
+
         {/* Hero Section */}
         <div className="hidden lg:block">
-          <div className="relative overflow-hidden rounded-3xl shadow-2xl animate-fade-in group">
+          <div className="relative overflow-hidden rounded-3xl shadow-2xl group">
             <img
               src={adminHero}
               alt="GharSeKro.in Admin Dashboard"
               className="w-full h-[600px] object-cover transition-transform duration-700 group-hover:scale-105"
             />
-            {/* Darker premium radial overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#0c1017]/95 via-[#131921]/80 to-[#1f2937]/50 flex items-center justify-center p-6">
-              {/* Floating Glassmorphic Card */}
               <div className="w-full max-w-md bg-slate-950/65 backdrop-blur-lg border border-white/10 rounded-3xl p-8 text-center shadow-2xl relative space-y-6">
-                {/* Glowing top element */}
                 <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-32 h-[2px] bg-gradient-to-r from-transparent via-[#febd69] to-transparent shadow-[0_0_8px_#febd69]" />
-                
-                {/* Logo with clean soft-shadow wrapper */}
+
                 <div className="flex items-center justify-center">
-                  <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center p-3.5 shadow-2xl border border-white/20 relative group-hover:scale-105 transition-transform">
+                  <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center p-3.5 shadow-2xl border border-white/20">
                     <img src="/logo.png" alt="GharSeKro Logo" className="w-full h-full object-contain" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <h1 className="text-4xl font-extrabold tracking-tight text-white bg-gradient-to-b from-white to-slate-200 bg-clip-text">
-                    GharSeKro.in
-                  </h1>
-                  <div className="inline-flex items-center justify-center bg-amber-500/10 text-[#febd69] border border-amber-500/20 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-widest shadow-sm">
+                  <h1 className="text-4xl font-extrabold tracking-tight text-white">GharSeKro.in</h1>
+                  <div className="inline-flex items-center justify-center bg-amber-500/10 text-[#febd69] border border-amber-500/20 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-widest">
                     Admin Portal
                   </div>
                 </div>
@@ -94,15 +96,14 @@ const Auth = () => {
                   Manage your store inventory, orders, and categories with absolute ease.
                 </p>
 
-                {/* Upgraded beautiful Lucide feature badges instead of emojis */}
                 <div className="flex items-center justify-center gap-6 pt-4 border-t border-white/5">
                   {[
                     { label: "Inventory", icon: Package, color: "text-amber-400 bg-amber-400/10 border-amber-400/20" },
                     { label: "Orders", icon: ShoppingCart, color: "text-blue-400 bg-blue-400/10 border-blue-400/20" },
-                    { label: "Analytics", icon: BarChart3, color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" }
+                    { label: "Analytics", icon: BarChart3, color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20" },
                   ].map(({ label, icon: Icon, color }) => (
                     <div key={label} className="flex flex-col items-center gap-2">
-                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${color} shadow-sm transition-all duration-300 hover:scale-110`}>
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center border ${color} shadow-sm`}>
                         <Icon className="w-5 h-5" />
                       </div>
                       <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">{label}</span>
@@ -114,63 +115,109 @@ const Auth = () => {
           </div>
         </div>
 
-        {/* Auth Card */}
+        {/* Login Card */}
         <div className="flex items-center justify-center">
           <Card className="w-full max-w-md shadow-2xl border border-white/10 bg-white/5 backdrop-blur-xl rounded-3xl overflow-hidden">
-            {/* Top gradient accent */}
             <div className="h-1 bg-gradient-to-r from-[#febd69] via-[#f59e0b] to-[#febd69]" />
 
-            <CardHeader className="text-center space-y-4 pt-8">
+            <CardHeader className="text-center space-y-4 pt-8 pb-4">
               <div className="flex items-center justify-center">
-                <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center p-2 shadow-xl border border-slate-100">
+                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center p-2 shadow-xl border border-slate-100">
                   <img src="/logo.png" alt="GharSeKro Logo" className="w-full h-full object-contain" />
                 </div>
               </div>
               <div>
-                <CardTitle className="text-2xl font-black text-white tracking-tight">
-                  Welcome Back
-                </CardTitle>
+                <CardTitle className="text-2xl font-black text-white tracking-tight">Admin Login</CardTitle>
                 <CardDescription className="text-slate-400 font-medium mt-1">
-                  Sign in to your GharSeKro.in Admin Dashboard
+                  Sign in to GharSeKro Admin Panel
                 </CardDescription>
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-5 px-8 pb-8">
-              {error && (
-                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
-                  <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
-                  <p className="text-sm text-red-400 font-medium">{error}</p>
-                </div>
-              )}
+            <CardContent className="px-8 pb-8">
+              <form onSubmit={handleLogin} className="space-y-5">
 
-              <Button
-                onClick={handleGoogleLogin}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-800 font-bold py-6 rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 text-sm"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-slate-600" />
-                ) : (
-                  <Chrome className="h-5 w-5 text-blue-500" />
+                {error && (
+                  <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3">
+                    <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+                    <p className="text-sm text-red-400 font-medium">{error}</p>
+                  </div>
                 )}
-                {isLoading ? "Redirecting..." : "Continue with Google"}
-              </Button>
 
-              <div className="text-center">
-                <p className="text-xs text-slate-500 font-medium">
-                  Secure authentication powered by Google OAuth 2.0
-                </p>
-              </div>
+                {/* Email Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    Email Address
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="admin@gharsekro.com"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); setError(null); }}
+                      className="pl-10 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500 rounded-xl"
+                      autoComplete="email"
+                    />
+                  </div>
+                </div>
 
-              <div className="border-t border-white/10 pt-4">
-                <p className="text-center text-xs text-slate-600">
-                  Only authorized GharSeKro admin accounts can access this panel
-                </p>
-              </div>
+                {/* Password Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => { setPassword(e.target.value); setError(null); }}
+                      className="pl-10 pr-12 h-12 bg-white/10 border-white/20 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500 rounded-xl"
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Login Button */}
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-12 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl shadow-lg shadow-amber-500/20 transition-all duration-200 hover:-translate-y-0.5 text-sm mt-2"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    "Sign In to Admin Panel"
+                  )}
+                </Button>
+
+                {/* Demo credentials hint */}
+                <div className="border border-white/10 rounded-xl p-3.5 space-y-1.5 bg-white/5">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Demo Credentials</p>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    <span className="text-slate-300">Email:</span> admin@gharsekro.com
+                  </p>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    <span className="text-slate-300">Password:</span> admin123
+                  </p>
+                </div>
+
+              </form>
             </CardContent>
           </Card>
         </div>
+
       </div>
     </div>
   );

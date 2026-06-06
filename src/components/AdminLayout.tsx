@@ -204,7 +204,7 @@ const AdminLayout = () => {
   }
 
   return (
-    <div className="h-screen w-screen flex overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="h-full w-full flex overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
       <AdminSidebar />
 
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
@@ -324,7 +324,7 @@ const AdminLayout = () => {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto min-h-0 p-8">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>

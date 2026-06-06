@@ -109,7 +109,7 @@ export function AdminSidebar() {
 
   return (
     <div className={cn(
-      "relative h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out shadow-lg text-sidebar-foreground",
+      "relative flex-shrink-0 bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out shadow-lg text-sidebar-foreground flex flex-col",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Background Pattern */}

@@ -36,7 +36,7 @@ import {
   TrendingDown,
   X
 } from "lucide-react";
-import { itemService, customerService } from "@/lib/api";
+import { itemService, customerService, categoryService } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface Item {
@@ -92,6 +92,7 @@ const WholesaleSettings = () => {
   const [customerSearch, setCustomerSearch] = useState("");
   const [activeTab, setActiveTab] = useState("pricing");
   const [filterWholesaleOnly, setFilterWholesaleOnly] = useState(false);
+  const [categoriesMap, setCategoriesMap] = useState<Record<string, string>>({});
 
   // Quick edit states
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -105,7 +106,23 @@ const WholesaleSettings = () => {
   useEffect(() => {
     fetchItems();
     fetchCustomers();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await categoryService.getCategories();
+      if (response.success && response.categories) {
+        const mapping: Record<string, string> = {};
+        response.categories.forEach((cat: any) => {
+          mapping[cat.id] = cat.title;
+        });
+        setCategoriesMap(mapping);
+      }
+    } catch (error) {
+      console.error("Failed to load categories map:", error);
+    }
+  };
 
   const fetchItems = async () => {
     try {
@@ -409,6 +426,9 @@ const WholesaleSettings = () => {
                       const rPrice = parseFloat(item.retailprice) || 0;
                       const wPrice = parseFloat(item.wholesaleprice) || 0;
                       const isEditing = editingItemId === item.id;
+
+                      const categoryTitle = categoriesMap[item.categoryId] || "";
+                      const isPlumbing = categoryTitle.toLowerCase() === "plumbing";
                       
                       // Margin calculation
                       const marginPercent = rPrice > 0 && wPrice > 0
@@ -445,7 +465,11 @@ const WholesaleSettings = () => {
 
                           {/* Wholesale Price */}
                           <TableCell className="py-4">
-                            {isEditing ? (
+                            {!isPlumbing ? (
+                              <Badge className="bg-slate-50 text-slate-400 border border-slate-200 text-[10px] font-semibold">
+                                Wholesale Disabled
+                              </Badge>
+                            ) : isEditing ? (
                               <div className="flex items-center gap-2">
                                 <span className="text-slate-400 font-bold text-sm">₹</span>
                                 <Input
@@ -469,7 +493,9 @@ const WholesaleSettings = () => {
 
                           {/* Min Purchase Qty */}
                           <TableCell className="py-4">
-                            {isEditing ? (
+                            {!isPlumbing ? (
+                              <span className="text-slate-400 font-semibold text-sm">-</span>
+                            ) : isEditing ? (
                               <Input
                                 type="number"
                                 value={editMinPurchase}
@@ -486,7 +512,9 @@ const WholesaleSettings = () => {
 
                           {/* Est. Margin */}
                           <TableCell className="py-4">
-                            {wPrice > 0 ? (
+                            {!isPlumbing ? (
+                              <span className="text-xs text-slate-400 font-semibold">-</span>
+                            ) : wPrice > 0 ? (
                               <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold flex items-center gap-1 w-fit">
                                 <TrendingDown className="w-3 h-3" />
                                 {marginPercent}% B2B Discount
@@ -513,7 +541,11 @@ const WholesaleSettings = () => {
 
                           {/* Actions */}
                           <TableCell className="pr-6 py-4 text-right">
-                            {isEditing ? (
+                            {!isPlumbing ? (
+                              <Badge className="bg-slate-50 text-slate-400 border border-slate-250/60 text-[10px] font-semibold">
+                                Retail Only
+                              </Badge>
+                            ) : isEditing ? (
                               <div className="flex justify-end gap-2">
                                 <Button
                                   size="sm"

@@ -120,8 +120,10 @@
     @apply border-border;
   }
 
-  body {
+  html, body, #root {
     @apply bg-background text-foreground;
+    height: 100%;
+    overflow: hidden;
   }
 }
 

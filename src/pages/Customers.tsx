@@ -105,14 +105,14 @@ const Customers = () => {
   };
 
   const filteredCustomers = customers.filter(c =>
-    c.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.shopname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.gstnumber.toLowerCase().includes(searchTerm.toLowerCase())
+    (c.user?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (c.user?.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (c.shopname || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (c.gstnumber || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Statistics calculations
-  const totalSpend = customers.reduce((sum, c) => sum + c.totalSpent, 0);
+  const totalSpend = customers.reduce((sum, c) => sum + Number(c.totalSpent || 0), 0);
   const totalWholesalers = customers.filter(c => c.type === "WHOLESALER").length;
   const totalRetailers = customers.filter(c => c.type === "RETAILER").length;
 
@@ -337,7 +337,7 @@ const Customers = () => {
                               })}
                             </TableCell>
                             <TableCell className="font-black text-slate-800">
-                              ₹{order.totalPrice.toLocaleString()}
+                              ₹{Number(order.totalPrice || 0).toLocaleString()}
                             </TableCell>
                             <TableCell>
                               <Badge className={cn(
@@ -484,7 +484,7 @@ const Customers = () => {
                           {cust.totalOrdersCount} orders
                         </TableCell>
                         <TableCell className="font-black text-slate-800">
-                          ₹{cust.totalSpent.toLocaleString()}
+                          ₹{Number(cust.totalSpent || 0).toLocaleString()}
                         </TableCell>
                         <TableCell className="text-slate-500 text-sm">
                           {cust.lastOrderDate ? (
