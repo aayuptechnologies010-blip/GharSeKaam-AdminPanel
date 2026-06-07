@@ -73,7 +73,274 @@ interface Order {
     latitude?: number | string | null;
     longitude?: number | string | null;
   };
+  estimatedDelivery?: string;
 }
+
+interface EstimatedDeliveryPickerProps {
+  orderId: string;
+  currentValue: string;
+  onUpdate: (orderId: string, value: string) => Promise<void>;
+}
+
+const EstimatedDeliveryPicker = ({ orderId, currentValue, onUpdate }: EstimatedDeliveryPickerProps) => {
+  const presets = [
+    "Within 1 Hour",
+    "Within 2 Hours",
+    "Within 4 Hours",
+    "Today by 6:00 PM",
+    "Tomorrow by 11:00 AM",
+    "Tomorrow by 4:00 PM",
+    "Tomorrow by 8:00 PM",
+    "Day after tomorrow",
+    "Within 3 Days"
+  ];
+
+  const getTodayString = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const getTomorrowString = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yyyy = tomorrow.getFullYear();
+    const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const dd = String(tomorrow.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const getDayAfterString = () => {
+    const dayAfter = new Date();
+    dayAfter.setDate(dayAfter.getDate() + 2);
+    const yyyy = dayAfter.getFullYear();
+    const mm = String(dayAfter.getMonth() + 1).padStart(2, '0');
+    const dd = String(dayAfter.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const parseCurrentValue = (val: string) => {
+    let dateStr = getTomorrowString();
+    let timeStr = "11:00";
+
+    if (!val) return { dateStr, timeStr };
+
+    const todayObj = new Date();
+    if (val.toLowerCase().includes("today")) {
+      dateStr = getTodayString();
+    } else if (val.toLowerCase().includes("tomorrow") && !val.toLowerCase().includes("day after")) {
+      dateStr = getTomorrowString();
+    } else if (val.toLowerCase().includes("day after")) {
+      dateStr = getDayAfterString();
+    } else {
+      // Try parsing direct date if it's in a general format
+      const parsedDate = Date.parse(val.split(" at ")[0]);
+      if (!isNaN(parsedDate)) {
+        const dObj = new Date(parsedDate);
+        const yyyy = dObj.getFullYear();
+        const mm = String(dObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(dObj.getDate()).padStart(2, '0');
+        dateStr = `${yyyy}-${mm}-${dd}`;
+      }
+    }
+
+    const timeMatch = val.match(/at\s+(\d+):(\d+)\s*(AM|PM)/i);
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1], 10);
+      const minutes = parseInt(timeMatch[2], 10);
+      const ampm = timeMatch[3].toUpperCase();
+      if (ampm === "PM" && hours < 12) hours += 12;
+      if (ampm === "AM" && hours === 12) hours = 0;
+      timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+
+    return { dateStr, timeStr };
+  };
+
+  const formatSelectedDelivery = (dStr: string, tStr: string): string => {
+    if (!dStr) return "";
+    
+    const dateObj = new Date(dStr);
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    const dayAfter = new Date();
+    dayAfter.setDate(today.getDate() + 2);
+
+    let timeFormatted = "";
+    if (tStr) {
+      const [hoursStr, minutesStr] = tStr.split(":");
+      let hours = parseInt(hoursStr, 10);
+      const minutes = parseInt(minutesStr, 10);
+      const ampm = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const minutesFormatted = minutes < 10 ? "0" + minutes : minutes;
+      timeFormatted = `at ${hours}:${minutesFormatted} ${ampm}`;
+    }
+
+    const isSameDay = (d1: Date, d2: Date) => 
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate();
+
+    if (isSameDay(dateObj, today)) {
+      return `Today ${timeFormatted}`.trim();
+    } else if (isSameDay(dateObj, tomorrow)) {
+      return `Tomorrow ${timeFormatted}`.trim();
+    } else if (isSameDay(dateObj, dayAfter)) {
+      return `Day after tomorrow ${timeFormatted}`.trim();
+    } else {
+      const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+      const dateFormatted = dateObj.toLocaleDateString('en-US', options);
+      return `${dateFormatted} ${timeFormatted}`.trim();
+    }
+  };
+
+  const isPreset = presets.includes(currentValue) || !currentValue;
+  const initialSelect = currentValue ? (isPreset ? currentValue : "custom") : "";
+
+  const [selectValue, setSelectValue] = useState(initialSelect);
+  const parsed = parseCurrentValue(currentValue);
+  const [selectedDate, setSelectedDate] = useState(parsed.dateStr);
+  const [selectedTime, setSelectedTime] = useState(parsed.timeStr);
+
+  const handleSelectChange = async (val: string) => {
+    setSelectValue(val);
+    if (val !== "custom") {
+      await onUpdate(orderId, val);
+    } else {
+      // Trigger update with default custom date time format
+      const formatted = formatSelectedDelivery(selectedDate, selectedTime);
+      await onUpdate(orderId, formatted);
+    }
+  };
+
+  const handleDateChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSelectedDate(val);
+    const formatted = formatSelectedDelivery(val, selectedTime);
+    await onUpdate(orderId, formatted);
+  };
+
+  const handleTimeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSelectedTime(val);
+    const formatted = formatSelectedDelivery(selectedDate, val);
+    await onUpdate(orderId, formatted);
+  };
+
+  const handleShortcutClick = async (type: 'today' | 'tomorrow' | 'dayAfter') => {
+    let dateVal = "";
+    if (type === 'today') dateVal = getTodayString();
+    else if (type === 'tomorrow') dateVal = getTomorrowString();
+    else dateVal = getDayAfterString();
+
+    setSelectedDate(dateVal);
+    const formatted = formatSelectedDelivery(dateVal, selectedTime);
+    await onUpdate(orderId, formatted);
+  };
+
+  return (
+    <div className="mt-4 pt-3 border-t border-slate-200/50 space-y-2 text-left">
+      <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block">
+        Estimated Delivery Time / Day
+      </label>
+      <Select value={selectValue} onValueChange={handleSelectChange}>
+        <SelectTrigger className="w-full h-9 border-slate-250 rounded-xl text-xs font-semibold text-slate-700 focus:ring-amber-400">
+          <SelectValue placeholder="Select delivery estimate..." />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="Within 1 Hour">Within 1 Hour</SelectItem>
+          <SelectItem value="Within 2 Hours">Within 2 Hours (Standard)</SelectItem>
+          <SelectItem value="Within 4 Hours">Within 4 Hours</SelectItem>
+          <SelectItem value="Today by 6:00 PM">Today by 6:00 PM</SelectItem>
+          <SelectItem value="Tomorrow by 11:00 AM">Tomorrow by 11:00 AM</SelectItem>
+          <SelectItem value="Tomorrow by 4:00 PM">Tomorrow by 4:00 PM</SelectItem>
+          <SelectItem value="Tomorrow by 8:00 PM">Tomorrow by 8:00 PM</SelectItem>
+          <SelectItem value="Day after tomorrow">Day after tomorrow</SelectItem>
+          <SelectItem value="Within 3 Days">Within 3 Days</SelectItem>
+          <SelectItem value="custom">Custom Date & Time...</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {selectValue === "custom" && (
+        <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-200/50 space-y-3 mt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+          {/* Shortcuts */}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className={`text-[10px] font-black uppercase tracking-wider h-7 px-2.5 rounded-lg flex-1 border transition-all cursor-pointer ${
+                selectedDate === getTodayString() 
+                  ? 'bg-amber-500 border-amber-500 text-slate-950 shadow-sm' 
+                  : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'
+              }`}
+              onClick={() => handleShortcutClick('today')}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              className={`text-[10px] font-black uppercase tracking-wider h-7 px-2.5 rounded-lg flex-1 border transition-all cursor-pointer ${
+                selectedDate === getTomorrowString() 
+                  ? 'bg-amber-500 border-amber-500 text-slate-950 shadow-sm' 
+                  : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'
+              }`}
+              onClick={() => handleShortcutClick('tomorrow')}
+            >
+              Tomorrow
+            </button>
+            <button
+              type="button"
+              className={`text-[10px] font-black uppercase tracking-wider h-7 px-2.5 rounded-lg flex-1 border transition-all cursor-pointer ${
+                selectedDate === getDayAfterString() 
+                  ? 'bg-amber-500 border-amber-500 text-slate-950 shadow-sm' 
+                  : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-600'
+              }`}
+              onClick={() => handleShortcutClick('dayAfter')}
+            >
+              Day After
+            </button>
+          </div>
+
+          {/* Date & Time Selectors */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1 text-left">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
+                Select Date
+              </label>
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={handleDateChange}
+                className="h-8 text-[11px] border-slate-250 focus:border-amber-400 focus:ring-amber-400 rounded-lg bg-white text-slate-800 font-bold px-2 w-full"
+              />
+            </div>
+            <div className="space-y-1 text-left">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">
+                Select Time
+              </label>
+              <Input
+                type="time"
+                value={selectedTime}
+                onChange={handleTimeChange}
+                className="h-8 text-[11px] border-slate-250 focus:border-amber-400 focus:ring-amber-400 rounded-lg bg-white text-slate-800 font-bold px-2 w-full"
+              />
+            </div>
+          </div>
+
+          {/* Resulting Preview */}
+          <div className="text-[10px] bg-amber-50/50 border border-amber-100/50 p-2 rounded-lg text-amber-800 font-black text-center uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-sm">
+            <span>📅 Scheduled:</span>
+            <span>{formatSelectedDelivery(selectedDate, selectedTime) || "Not Set"}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Orders = () => {
   const { toast } = useToast();
@@ -545,7 +812,7 @@ const Orders = () => {
                               <Eye className="h-4.5 w-4.5" />
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="max-w-2xl bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-2xl p-0">
+                          <DialogContent className="max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl p-0 max-h-[90vh] overflow-y-auto">
                             
                             {/* Indian flag strip */}
                             <div className="h-1.5 bg-gradient-to-r from-orange-500 via-white to-green-500" />
@@ -570,6 +837,27 @@ const Orders = () => {
                                       {getStatusDisplayText(order.status)}
                                     </Badge>
                                   </p>
+
+                                  <EstimatedDeliveryPicker
+                                    orderId={order.id}
+                                    currentValue={order.estimatedDelivery || ""}
+                                    onUpdate={async (orderId, val) => {
+                                      try {
+                                        await orderService.updateDeliveryTime(orderId, val);
+                                        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, estimatedDelivery: val } : o));
+                                        toast({
+                                          title: "Delivery Time Updated",
+                                          description: `Estimation set to "${val}"`,
+                                        });
+                                      } catch (err) {
+                                        toast({
+                                          title: "Error updating",
+                                          description: "Failed to update delivery time",
+                                          variant: "destructive"
+                                        });
+                                      }
+                                    }}
+                                  />
                                 </div>
                                 <div>
                                   <h4 className="font-extrabold text-slate-800 uppercase tracking-widest text-xs mb-3">Delivery Address</h4>

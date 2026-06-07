@@ -1,25 +1,24 @@
 // ── DUMMY DATA MODE — Backend Disconnected ───────────────────
 
 const DUMMY_CATEGORIES = [
-  { id: "cat-1", title: "Power Tools", image: "https://images.unsplash.com/photo-1504148455328-c376907d081c?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 10 * 86400000).toISOString() },
-  { id: "cat-2", title: "Cement & Sand", image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 8 * 86400000).toISOString() },
-  { id: "cat-3", title: "Electricals", image: "https://images.unsplash.com/photo-1601597111158-2fceff270190?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 6 * 86400000).toISOString() },
-  { id: "cat-4", title: "Paints", image: "https://images.unsplash.com/photo-1562973831-2d378b66d4c1?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 5 * 86400000).toISOString() },
-  { id: "cat-5", title: "Plumbing", image: "https://images.unsplash.com/photo-1585131838827-0fa870c52bb3?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 4 * 86400000).toISOString() },
-  { id: "cat-6", title: "Safety Equipment", image: "https://images.unsplash.com/photo-1534224039826-c7a0dea0e66a?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 3 * 86400000).toISOString() },
-  { id: "cat-7", title: "Hardware & Locks", image: "https://images.unsplash.com/photo-1590397576390-67258d537f59?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
-  { id: "cat-8", title: "Steel & Iron", image: "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 1 * 86400000).toISOString() },
+  { id: "cat-hl", title: "Hardware & Locks", image: "https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 10 * 86400000).toISOString() },
+  { id: "cat-el", title: "Electrical", image: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 8 * 86400000).toISOString() },
+  { id: "cat-pt", title: "Paint", image: "https://images.unsplash.com/photo-1595206133361-b1fe343e5e23?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 6 * 86400000).toISOString() },
+  { id: "cat-pl", title: "Plumbing Fitting", image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 5 * 86400000).toISOString() },
+  { id: "cat-sv", title: "Service", image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 4 * 86400000).toISOString() },
+  { id: "cat-ts", title: "Tools & Safety Equipments", image: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 3 * 86400000).toISOString() },
+  { id: "cat-bm", title: "Building Material (Cement, Sand, Iron)", image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?q=80&w=300&auto=format&fit=crop", createdAt: new Date(Date.now() - 2 * 86400000).toISOString() }
 ];
 
 const DUMMY_ITEMS = [
-  { id: "item-1", title: "Bosch GSB 500 RE Professional Impact Drill Machine", retailprice: "2499", wholesaleprice: "2199", currentQty: 45, categoryId: "cat-1", category: { id: "cat-1", title: "Power Tools" }, images: ["https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "piece", discount: 20, description: "Professional 500W impact drill.", warranty: "1 Year", variants: [{ size: "500W Standard", price: 2499 }, { size: "600W Heavy Duty", price: 2999 }] },
-  { id: "item-2", title: "Ultratech Premium Portland Pozzolana Cement (PPC)", retailprice: "375", wholesaleprice: "350", currentQty: 8, categoryId: "cat-2", category: { id: "cat-2", title: "Cement & Sand" }, images: ["https://images.unsplash.com/photo-1589939705384-5185137a7f0f?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "bag", discount: 10, description: "Premium PPC cement.", warranty: "N/A", variants: [{ size: "50kg Bag", price: 375 }, { size: "1 Ton Bundle", price: 7200 }] },
-  { id: "item-3", title: "Havells Life Line FR-LSH House Wire (90m)", retailprice: "1599", wholesaleprice: "1399", currentQty: 3, categoryId: "cat-3", category: { id: "cat-3", title: "Electricals" }, images: ["https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "roll", discount: 15, description: "FR-LSH fire resistant copper wire.", warranty: "20 Years", variants: [{ size: "1.5 Sqmm", price: 1599 }, { size: "2.5 Sqmm", price: 2499 }] },
-  { id: "item-4", title: "Godrej Brass Nav-Tal Padlock 6-Levers", retailprice: "799", wholesaleprice: "699", currentQty: 62, categoryId: "cat-7", category: { id: "cat-7", title: "Hardware & Locks" }, images: ["https://images.unsplash.com/photo-1590397576390-67258d537f59?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "piece", discount: 18, description: "Heavy-duty brass padlock.", warranty: "5 Years", variants: [{ size: "50mm", price: 650 }, { size: "65mm", price: 799 }] },
-  { id: "item-5", title: "Asian Paints Apex Ultima Exterior Emulsion White", retailprice: "3200", wholesaleprice: "2890", currentQty: 0, categoryId: "cat-4", category: { id: "cat-4", title: "Paints" }, images: ["https://images.unsplash.com/photo-1562973831-2d378b66d4c1?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "bucket", discount: 22, description: "Premium exterior emulsion.", warranty: "7 Years", variants: [{ size: "4 Litre", price: 1450 }, { size: "10 Litre", price: 3200 }] },
-  { id: "item-6", title: "Supreme PVC Pressure Pipe 4 Inch Class-3 (6m)", retailprice: "499", wholesaleprice: "420", currentQty: 120, categoryId: "cat-5", category: { id: "cat-5", title: "Plumbing" }, images: ["https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "piece", discount: 12, description: "High-pressure uPVC pipe.", warranty: "10 Years", variants: [{ size: "3 Inch", price: 399 }, { size: "4 Inch", price: 499 }] },
-  { id: "item-7", title: "Tata Tiscon TMT Steel Rebar Fe 550D", retailprice: "850", wholesaleprice: "760", currentQty: 5, categoryId: "cat-8", category: { id: "cat-8", title: "Steel & Iron" }, images: ["https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "rod", discount: 8, description: "High-strength TMT rebar.", warranty: "N/A", variants: [{ size: "10mm", price: 650 }, { size: "12mm", price: 850 }] },
-  { id: "item-8", title: "Cera Brass Designer Basin Faucet Chrome Finish", retailprice: "1799", wholesaleprice: "1499", currentQty: 28, categoryId: "cat-5", category: { id: "cat-5", title: "Plumbing" }, images: ["https://images.unsplash.com/photo-1609840114035-3c97126944e8?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "piece", discount: 25, description: "Premium brass faucet.", warranty: "7 Years", variants: [{ size: "Standard Cold", price: 1799 }, { size: "Quarter Turn Mixer", price: 2999 }] },
+  { id: "item-1", title: "Bosch GSB 500 RE Professional Impact Drill Machine", retailprice: "2499", wholesaleprice: "2199", currentQty: 45, categoryId: "cat-ts", category: { id: "cat-ts", title: "Tools & Safety Equipments" }, images: ["https://images.unsplash.com/photo-1504307651254-35680f356dfd?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "piece", discount: 20, description: "Professional 500W impact drill.", warranty: "1 Year", variants: [{ size: "500W Standard", price: 2499 }, { size: "600W Heavy Duty", price: 2999 }] },
+  { id: "item-2", title: "Ultratech Premium Portland Pozzolana Cement (PPC)", retailprice: "375", wholesaleprice: "350", currentQty: 8, categoryId: "cat-bm", category: { id: "cat-bm", title: "Building Material (Cement, Sand, Iron)" }, images: ["https://images.unsplash.com/photo-1589939705384-5185137a7f0f?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "bag", discount: 10, description: "Premium PPC cement.", warranty: "N/A", variants: [{ size: "50kg Bag", price: 375 }, { size: "1 Ton Bundle", price: 7200 }] },
+  { id: "item-3", title: "Havells Life Line FR-LSH House Wire (90m)", retailprice: "1599", wholesaleprice: "1399", currentQty: 3, categoryId: "cat-el", category: { id: "cat-el", title: "Electrical" }, images: ["https://images.unsplash.com/photo-1563770660941-20978e870e26?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "roll", discount: 15, description: "FR-LSH fire resistant copper wire.", warranty: "20 Years", variants: [{ size: "1.5 Sqmm", price: 1599 }, { size: "2.5 Sqmm", price: 2499 }] },
+  { id: "item-4", title: "Godrej Brass Nav-Tal Padlock 6-Levers", retailprice: "799", wholesaleprice: "699", currentQty: 62, categoryId: "cat-hl", category: { id: "cat-hl", title: "Hardware & Locks" }, images: ["https://images.unsplash.com/photo-1590397576390-67258d537f59?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "piece", discount: 18, description: "Heavy-duty brass padlock.", warranty: "5 Years", variants: [{ size: "50mm", price: 650 }, { size: "65mm", price: 799 }] },
+  { id: "item-5", title: "Asian Paints Apex Ultima Exterior Emulsion White", retailprice: "3200", wholesaleprice: "2890", currentQty: 0, categoryId: "cat-pt", category: { id: "cat-pt", title: "Paint" }, images: ["https://images.unsplash.com/photo-1562973831-2d378b66d4c1?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "bucket", discount: 22, description: "Premium exterior emulsion.", warranty: "7 Years", variants: [{ size: "4 Litre", price: 1450 }, { size: "10 Litre", price: 3200 }] },
+  { id: "item-6", title: "Supreme PVC Pressure Pipe 4 Inch Class-3 (6m)", retailprice: "499", wholesaleprice: "420", currentQty: 120, categoryId: "cat-pl", category: { id: "cat-pl", title: "Plumbing Fitting" }, images: ["https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "piece", discount: 12, description: "High-pressure uPVC pipe.", warranty: "10 Years", variants: [{ size: "3 Inch", price: 399 }, { size: "4 Inch", price: 499 }] },
+  { id: "item-7", title: "Tata Tiscon TMT Steel Rebar Fe 550D", retailprice: "850", wholesaleprice: "760", currentQty: 5, categoryId: "cat-bm", category: { id: "cat-bm", title: "Building Material (Cement, Sand, Iron)" }, images: ["https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "rod", discount: 8, description: "High-strength TMT rebar.", warranty: "N/A", variants: [{ size: "10mm", price: 650 }, { size: "12mm", price: 850 }] },
+  { id: "item-8", title: "Cera Brass Designer Basin Faucet Chrome Finish", retailprice: "1799", wholesaleprice: "1499", currentQty: 28, categoryId: "cat-pl", category: { id: "cat-pl", title: "Plumbing Fitting" }, images: ["https://images.unsplash.com/photo-1609840114035-3c97126944e8?q=80&w=600&auto=format&fit=crop"], availability: "BOTH", unit: "piece", discount: 25, description: "Premium brass faucet.", warranty: "7 Years", variants: [{ size: "Standard Cold", price: 1799 }, { size: "Quarter Turn Mixer", price: 2999 }] },
 ];
 
 const DUMMY_ORDERS = [
@@ -124,6 +123,29 @@ export const orderService = {
     };
     const newStatus = statusMap[status.toLowerCase()] || status.toUpperCase();
     _orders = _orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
+    return { success: true };
+  },
+
+  updateDeliveryTime: async (orderId: string, estimatedDelivery: string) => {
+    _orders = _orders.map(o => o.id === orderId ? { ...o, estimatedDelivery } : o);
+    
+    // Also support calling backend if configured
+    const token = localStorage.getItem("authToken");
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+    if (token) {
+      try {
+        await fetch(`${baseUrl}/owner/orders/${orderId}/update-delivery-time`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": token
+          },
+          body: JSON.stringify({ estimatedDelivery })
+        });
+      } catch (err) {
+        console.error("Backend updateDeliveryTime failed:", err);
+      }
+    }
     return { success: true };
   },
 

@@ -14,7 +14,11 @@ import { itemService, categoryService } from "@/lib/api";
 interface Variant {
   id: string;
   size: string;
-  price: string;
+  price: string;                 // Retail Price (per piece)
+  wholesaleprice: string;        // Wholesale Price (per piece)
+  bundleQty: string;             // How many pieces in 1 packet/bundle
+  bundlePrice: string;           // Retail price for full bundle
+  bundleWholesalePrice: string;  // Wholesale price for full bundle
 }
 
 const AddItem = () => {
@@ -104,14 +108,14 @@ const AddItem = () => {
   };
 
   const addVariant = () => {
-    setVariants(prev => [...prev, { id: Date.now().toString(), size: "", price: "" }]);
+    setVariants(prev => [...prev, { id: Date.now().toString(), size: "", price: "", wholesaleprice: "", bundleQty: "", bundlePrice: "", bundleWholesalePrice: "" }]);
   };
 
   const removeVariant = (id: string) => {
     setVariants(prev => prev.filter(v => v.id !== id));
   };
 
-  const updateVariant = (id: string, field: "size" | "price", value: string) => {
+  const updateVariant = (id: string, field: "size" | "price" | "wholesaleprice" | "bundleQty" | "bundlePrice" | "bundleWholesalePrice", value: string) => {
     setVariants(prev =>
       prev.map(v => v.id === id ? { ...v, [field]: value } : v)
     );
@@ -149,7 +153,26 @@ const AddItem = () => {
         addons: itemData.addons,
         discount: parseFloat(itemData.discount),
         minimumPurchase: parseInt(itemData.minimumPurchase),
-        variants: variants.length > 0 ? JSON.stringify(variants.map(v => ({ size: v.size, price: parseFloat(v.price) }))) : null,
+        variants: variants.length > 0 ? JSON.stringify(variants.map(v => {
+          const resObj: any = { size: v.size };
+          if (itemData.availability === "BOTH" || itemData.availability === "RETAILER") {
+            resObj.price = parseFloat(v.price) || 0;
+          }
+          if (itemData.availability === "BOTH" || itemData.availability === "WHOLESALE") {
+            resObj.wholesaleprice = parseFloat(v.wholesaleprice) || 0;
+          }
+          // Bundle / Packet fields (optional)
+          if (v.bundleQty && parseFloat(v.bundleQty) > 0) {
+            resObj.bundleQty = parseInt(v.bundleQty);
+          }
+          if (v.bundlePrice && parseFloat(v.bundlePrice) > 0) {
+            resObj.bundlePrice = parseFloat(v.bundlePrice);
+          }
+          if (v.bundleWholesalePrice && parseFloat(v.bundleWholesalePrice) > 0) {
+            resObj.bundleWholesalePrice = parseFloat(v.bundleWholesalePrice);
+          }
+          return resObj;
+        })) : null,
         images: realFiles,
         imageUrls: urlImages
       };
@@ -460,41 +483,110 @@ const AddItem = () => {
                   </Button>
                 </div>
 
-                {variants.length > 0 && (
+                 {variants.length > 0 && (
                   <div className="space-y-3">
                     {variants.map((variant) => (
-                      <div key={variant.id} className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end bg-background p-3 rounded-lg border">
-                        <div className="flex-1">
-                          <Label htmlFor={`size-${variant.id}`} className="text-xs">Size</Label>
-                          <Input
-                            id={`size-${variant.id}`}
-                            placeholder="e.g., S, M, L, XL, 500ml"
-                            value={variant.size}
-                            onChange={(e) => updateVariant(variant.id, "size", e.target.value)}
-                            className="shadow-admin-sm mt-1"
-                          />
+                      <div key={variant.id} className="flex flex-col gap-3 bg-background p-3 rounded-lg border">
+                        {/* Row 1: Size + Piece Prices */}
+                        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end">
+                          <div className="flex-1">
+                            <Label htmlFor={`size-${variant.id}`} className="text-xs">Size *</Label>
+                            <Input
+                              id={`size-${variant.id}`}
+                              placeholder="e.g., 1/2 inch, 1 inch, 3 inch"
+                              value={variant.size}
+                              onChange={(e) => updateVariant(variant.id, "size", e.target.value)}
+                              className="shadow-admin-sm mt-1"
+                              required
+                            />
+                          </div>
+                          {(itemData.availability === "BOTH" || itemData.availability === "RETAILER") && (
+                            <div className="flex-1">
+                              <Label htmlFor={`price-${variant.id}`} className="text-xs">Retail Price / Piece (₹) *</Label>
+                              <Input
+                                id={`price-${variant.id}`}
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={variant.price}
+                                onChange={(e) => updateVariant(variant.id, "price", e.target.value)}
+                                className="shadow-admin-sm mt-1"
+                                required
+                              />
+                            </div>
+                          )}
+                          {(itemData.availability === "BOTH" || itemData.availability === "WHOLESALE") && (
+                            <div className="flex-1">
+                              <Label htmlFor={`wholesaleprice-${variant.id}`} className="text-xs">Wholesale Price / Piece (₹)</Label>
+                              <Input
+                                id={`wholesaleprice-${variant.id}`}
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={variant.wholesaleprice}
+                                onChange={(e) => updateVariant(variant.id, "wholesaleprice", e.target.value)}
+                                className="shadow-admin-sm mt-1"
+                              />
+                            </div>
+                          )}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeVariant(variant.id)}
+                            className="px-2 h-10 sm:h-9 self-end mt-2 sm:mt-0 flex items-center justify-center shrink-0 border-red-200 hover:bg-red-50 hover:text-red-600"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <div className="flex-1">
-                          <Label htmlFor={`price-${variant.id}`} className="text-xs">Price</Label>
-                          <Input
-                            id={`price-${variant.id}`}
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={variant.price}
-                            onChange={(e) => updateVariant(variant.id, "price", e.target.value)}
-                            className="shadow-admin-sm mt-1"
-                          />
+
+                        {/* Row 2: Bundle / Packet Options */}
+                        <div className="pt-2 border-t border-dashed border-slate-200">
+                          <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2 flex items-center gap-1">
+                            <Package className="h-3 w-3" /> Bundle / Packet Option (Optional)
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex-1">
+                              <Label htmlFor={`bundleQty-${variant.id}`} className="text-xs text-slate-500">Pieces per Packet</Label>
+                              <Input
+                                id={`bundleQty-${variant.id}`}
+                                type="number"
+                                placeholder="e.g., 20"
+                                value={variant.bundleQty}
+                                onChange={(e) => updateVariant(variant.id, "bundleQty", e.target.value)}
+                                className="shadow-admin-sm mt-1"
+                              />
+                            </div>
+                            {(itemData.availability === "BOTH" || itemData.availability === "RETAILER") && (
+                              <div className="flex-1">
+                                <Label htmlFor={`bundlePrice-${variant.id}`} className="text-xs text-slate-500">Bundle Retail Price (₹)</Label>
+                                <Input
+                                  id={`bundlePrice-${variant.id}`}
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  value={variant.bundlePrice}
+                                  onChange={(e) => updateVariant(variant.id, "bundlePrice", e.target.value)}
+                                  className="shadow-admin-sm mt-1"
+                                />
+                              </div>
+                            )}
+                            {(itemData.availability === "BOTH" || itemData.availability === "WHOLESALE") && (
+                              <div className="flex-1">
+                                <Label htmlFor={`bundleWholesalePrice-${variant.id}`} className="text-xs text-slate-500">Bundle Wholesale Price (₹)</Label>
+                                <Input
+                                  id={`bundleWholesalePrice-${variant.id}`}
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  value={variant.bundleWholesalePrice}
+                                  onChange={(e) => updateVariant(variant.id, "bundleWholesalePrice", e.target.value)}
+                                  className="shadow-admin-sm mt-1"
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeVariant(variant.id)}
-                          className="px-2 h-10 sm:h-9 self-end mt-2 sm:mt-0 flex items-center justify-center shrink-0"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
                       </div>
                     ))}
                   </div>

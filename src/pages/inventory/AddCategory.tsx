@@ -9,6 +9,16 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { categoryService } from "@/lib/api";
 
+const PREDEFINED_CATEGORIES = [
+  { title: "Hardware & Locks", desc: "Premium architectural locks, brass padlocks, door handles, and safety cabinet hardware fittings." },
+  { title: "Electrical", desc: "Industrial and residential wiring, modular switches, copper conductors, LED panels, and distribution boards." },
+  { title: "Paint", desc: "Exterior emulsions, primers, surface coatings, interior paints, wall distempers, and brush accessories." },
+  { title: "Plumbing Fitting", desc: "Leak-proof PVC joint fittings, designer taps, high-pressure uPVC pipes, column pipes, and bath mixers." },
+  { title: "Service", desc: "Background verified professional contractor manpower, Rajmistries, plumbers, and safety supervisors." },
+  { title: "Tools & Safety Equipments", desc: "High-torque power drills, professional grinders, safety helmets, caution tape, gloves, and site protective gear." },
+  { title: "Building Material (Cement, Sand, Iron)", desc: "Premium grade portland Pozzolana cement bags, river aggregate sand, high-tensile TMT steel rebars, and site construction aggregates." }
+];
+
 const AddCategory = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -123,7 +133,25 @@ const AddCategory = () => {
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
+              
+              {/* Prefill Section */}
+              <div className="space-y-2 text-left">
+                <Label className="text-slate-500 font-bold">Quick Prefill Predefined Categories</Label>
+                <div className="flex flex-wrap gap-2 pt-1 pb-3">
+                  {PREDEFINED_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.title}
+                      type="button"
+                      onClick={() => setCategoryData({ title: cat.title, description: cat.desc })}
+                      className="px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-400 hover:text-amber-700 transition-all text-slate-650"
+                    >
+                      {cat.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2 text-left">
                 <Label htmlFor="title">Category Title *</Label>
                 <Input
                   id="title"
@@ -131,7 +159,7 @@ const AddCategory = () => {
                   value={categoryData.title}
                   onChange={(e) => setCategoryData(prev => ({ ...prev, title: e.target.value }))}
                   required
-                  className="shadow-admin-sm"
+                  className="shadow-admin-sm text-left"
                 />
               </div>
 

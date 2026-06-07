@@ -14,7 +14,11 @@ import { itemService, categoryService } from "@/lib/api";
 interface Variant {
   id: string;
   size: string;
-  price: string;
+  price: string;                 // Retail price (per piece)
+  wholesaleprice: string;        // Wholesale price (per piece)
+  bundleQty: string;             // How many pieces in 1 packet/bundle
+  bundlePrice: string;           // Retail price for full bundle
+  bundleWholesalePrice: string;  // Wholesale price for full bundle
 }
 
 const UNITS = ["PIECE", "KG", "LITRE", "GRAM", "PACK", "OTHER"];
@@ -33,6 +37,7 @@ const EditItem = () => {
     wholesaleprice: "",
     retailprice: "",
     unit: "PIECE",
+    availability: "BOTH",
     currentQty: "",
     warranty: "",
     addons: "",
@@ -54,6 +59,7 @@ const EditItem = () => {
         wholesaleprice: item.wholesaleprice || "",
         retailprice: item.retailprice || "",
         unit: item.unit || "PIECE",
+        availability: item.availability || "BOTH",
         currentQty: item.currentQty?.toString() || "",
         warranty: item.warranty || "",
         addons: Array.isArray(item.addons) ? item.addons.join(", ") : (item.addons || ""),
@@ -70,7 +76,11 @@ const EditItem = () => {
             setVariants(parsed.map((v: any) => ({
               id: Date.now().toString() + Math.random(),
               size: v.size || "",
-              price: v.price?.toString() || ""
+              price: v.price?.toString() || "",
+              wholesaleprice: v.wholesaleprice?.toString() || "",
+              bundleQty: v.bundleQty?.toString() || "",
+              bundlePrice: v.bundlePrice?.toString() || "",
+              bundleWholesalePrice: v.bundleWholesalePrice?.toString() || ""
             })));
           }
         } catch (e) {
@@ -113,7 +123,26 @@ const EditItem = () => {
       const payload = { ...itemData } as any;
       if (variants.length > 0) {
         payload.variants = JSON.stringify(
-          variants.map(v => ({ size: v.size, price: parseFloat(v.price) }))
+          variants.map(v => {
+            const resObj: any = { size: v.size };
+            if (itemData.availability === "BOTH" || itemData.availability === "RETAILER") {
+              resObj.price = parseFloat(v.price) || 0;
+            }
+            if (itemData.availability === "BOTH" || itemData.availability === "WHOLESALE") {
+              resObj.wholesaleprice = parseFloat(v.wholesaleprice) || 0;
+            }
+            // Bundle / Packet fields (optional)
+            if (v.bundleQty && parseFloat(v.bundleQty) > 0) {
+              resObj.bundleQty = parseInt(v.bundleQty);
+            }
+            if (v.bundlePrice && parseFloat(v.bundlePrice) > 0) {
+              resObj.bundlePrice = parseFloat(v.bundlePrice);
+            }
+            if (v.bundleWholesalePrice && parseFloat(v.bundleWholesalePrice) > 0) {
+              resObj.bundleWholesalePrice = parseFloat(v.bundleWholesalePrice);
+            }
+            return resObj;
+          })
         );
       }
 
@@ -200,6 +229,23 @@ const EditItem = () => {
                           {category.title}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="availability">Availability *</Label>
+                  <Select
+                    value={itemData.availability}
+                    onValueChange={(value) => setItemData(prev => ({ ...prev, availability: value }))}
+                  >
+                    <SelectTrigger className="shadow-admin-sm">
+                      <SelectValue placeholder="Select availability" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="RETAILER">Retailer</SelectItem>
+                      <SelectItem value="WHOLESALE">Wholesale</SelectItem>
+                      <SelectItem value="BOTH">Both</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -317,44 +363,125 @@ const EditItem = () => {
                 ) : (
                   <div className="space-y-3">
                     {variants.map((v) => (
-                      <div key={v.id} className="flex gap-2 items-center bg-background p-3 rounded-md border">
-                        <div className="flex-1">
-                          <Label className="text-xs text-muted-foreground">Size</Label>
-                          <Input
-                            placeholder="e.g., S, M, L, XL"
-                            value={v.size}
-                            onChange={(e) =>
-                              setVariants(prev =>
-                                prev.map(x => x.id === v.id ? { ...x, size: e.target.value } : x)
-                              )
-                            }
-                            className="shadow-admin-sm mt-1"
-                          />
+                      <div key={v.id} className="flex flex-col gap-3 bg-background p-3 rounded-md border">
+                        {/* Row 1: Size + Piece Prices */}
+                        <div className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
+                          <div className="flex-1 min-w-[120px]">
+                            <Label className="text-xs text-muted-foreground">Size *</Label>
+                            <Input
+                              placeholder="e.g., 1/2 inch, 1 inch"
+                              value={v.size}
+                              onChange={(e) =>
+                                setVariants(prev =>
+                                  prev.map(x => x.id === v.id ? { ...x, size: e.target.value } : x)
+                                )
+                              }
+                              className="shadow-admin-sm mt-1"
+                              required
+                            />
+                          </div>
+                          {(itemData.availability === "BOTH" || itemData.availability === "RETAILER") && (
+                            <div className="flex-1 min-w-[100px]">
+                              <Label className="text-xs text-muted-foreground">Retail / Piece (₹) *</Label>
+                              <Input
+                                placeholder="0.00"
+                                type="number"
+                                step="0.01"
+                                value={v.price}
+                                onChange={(e) =>
+                                  setVariants(prev =>
+                                    prev.map(x => x.id === v.id ? { ...x, price: e.target.value } : x)
+                                  )
+                                }
+                                className="shadow-admin-sm mt-1"
+                                required
+                              />
+                            </div>
+                          )}
+                          {(itemData.availability === "BOTH" || itemData.availability === "WHOLESALE") && (
+                            <div className="flex-1 min-w-[100px]">
+                              <Label className="text-xs text-muted-foreground">Wholesale / Piece (₹)</Label>
+                              <Input
+                                placeholder="0.00"
+                                type="number"
+                                step="0.01"
+                                value={v.wholesaleprice}
+                                onChange={(e) =>
+                                  setVariants(prev =>
+                                    prev.map(x => x.id === v.id ? { ...x, wholesaleprice: e.target.value } : x)
+                                  )
+                                }
+                                className="shadow-admin-sm mt-1"
+                              />
+                            </div>
+                          )}
+                          <Button
+                            variant="destructive"
+                            className="p-2 h-10 mt-5 self-end shrink-0"
+                            onClick={() => setVariants(prev => prev.filter(x => x.id !== v.id))}
+                            type="button"
+                            title="Remove variant"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <div className="flex-1">
-                          <Label className="text-xs text-muted-foreground">Price</Label>
-                          <Input
-                            placeholder="0.00"
-                            type="number"
-                            step="0.01"
-                            value={v.price}
-                            onChange={(e) =>
-                              setVariants(prev =>
-                                prev.map(x => x.id === v.id ? { ...x, price: e.target.value } : x)
-                              )
-                            }
-                            className="shadow-admin-sm mt-1"
-                          />
+
+                        {/* Row 2: Bundle / Packet Options */}
+                        <div className="pt-2 border-t border-dashed border-slate-200">
+                          <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2 flex items-center gap-1">
+                            <Package className="h-3 w-3" /> Bundle / Packet Option (Optional)
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex-1">
+                              <Label className="text-xs text-slate-500">Pieces per Packet</Label>
+                              <Input
+                                type="number"
+                                placeholder="e.g., 20"
+                                value={v.bundleQty}
+                                onChange={(e) =>
+                                  setVariants(prev =>
+                                    prev.map(x => x.id === v.id ? { ...x, bundleQty: e.target.value } : x)
+                                  )
+                                }
+                                className="shadow-admin-sm mt-1"
+                              />
+                            </div>
+                            {(itemData.availability === "BOTH" || itemData.availability === "RETAILER") && (
+                              <div className="flex-1">
+                                <Label className="text-xs text-slate-500">Bundle Retail Price (₹)</Label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  value={v.bundlePrice}
+                                  onChange={(e) =>
+                                    setVariants(prev =>
+                                      prev.map(x => x.id === v.id ? { ...x, bundlePrice: e.target.value } : x)
+                                    )
+                                  }
+                                  className="shadow-admin-sm mt-1"
+                                />
+                              </div>
+                            )}
+                            {(itemData.availability === "BOTH" || itemData.availability === "WHOLESALE") && (
+                              <div className="flex-1">
+                                <Label className="text-xs text-slate-500">Bundle Wholesale Price (₹)</Label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="0.00"
+                                  value={v.bundleWholesalePrice}
+                                  onChange={(e) =>
+                                    setVariants(prev =>
+                                      prev.map(x => x.id === v.id ? { ...x, bundleWholesalePrice: e.target.value } : x)
+                                    )
+                                  }
+                                  className="shadow-admin-sm mt-1"
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <Button
-                          variant="destructive"
-                          className="p-2 h-10"
-                          onClick={() => setVariants(prev => prev.filter(x => x.id !== v.id))}
-                          type="button"
-                          title="Remove variant"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
                       </div>
                     ))}
                   </div>
@@ -363,7 +490,7 @@ const EditItem = () => {
                 <Button
                   variant="outline"
                   className="flex items-center gap-2 w-full"
-                  onClick={() => setVariants(prev => [...prev, { id: Date.now().toString(), size: "", price: "" }])}
+                  onClick={() => setVariants(prev => [...prev, { id: (Date.now() + Math.random()).toString(), size: "", price: "", wholesaleprice: "", bundleQty: "", bundlePrice: "", bundleWholesalePrice: "" }])}
                   type="button"
                 >
                   <Plus className="h-4 w-4" /> Add New Variant
