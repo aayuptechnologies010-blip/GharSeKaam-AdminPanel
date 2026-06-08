@@ -428,7 +428,7 @@ const WholesaleSettings = () => {
                       const isEditing = editingItemId === item.id;
 
                       const categoryTitle = categoriesMap[item.categoryId] || "";
-                      const isPlumbing = categoryTitle.toLowerCase() === "plumbing";
+                      const isPlumbing = categoryTitle.toLowerCase().includes("plumbing");
                       
                       // Margin calculation
                       const marginPercent = rPrice > 0 && wPrice > 0

@@ -14,6 +14,8 @@ const ADMIN_CREDENTIALS = [
   { email: "owner@gharsekro.com", password: "owner123", name: "Store Owner" },
 ];
 
+import { API_BASE_URL } from "@/lib/constants";
+
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -25,42 +27,50 @@ const Auth = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) navigate("/dashboard");
-  }, [navigate]);
+    // Check for query parameters if we are on /oauth/callback or if token is in URL
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    const success = params.get("success");
+    const name = params.get("name");
+    const emailParam = params.get("email");
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    if (!email.trim() || !password.trim()) {
-      setError("Please enter both email and password.");
-      return;
-    }
-
-    setIsLoading(true);
-
-    setTimeout(() => {
-      const match = ADMIN_CREDENTIALS.find(
-        (c) => c.email === email.trim().toLowerCase() && c.password === password
-      );
-
-      if (match) {
-        localStorage.setItem("authToken", "demo-admin-token-" + Date.now());
-        localStorage.setItem("userName", match.name);
-        localStorage.setItem("userEmail", match.email);
-        localStorage.setItem("adminPassword", match.password);
+    if (token) {
+      console.log("OAuth Callback: Found token in URL parameters, success status:", success);
+      if (success === "yes") {
+        localStorage.setItem("authToken", token);
+        if (name) localStorage.setItem("userName", name);
+        if (emailParam) localStorage.setItem("userEmail", emailParam);
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${match.name}!`,
+          description: `Welcome back, ${name || "Admin"}!`,
         });
         navigate("/dashboard");
       } else {
-        setError("Invalid email or password. Please try again.");
+        // success === "no" or setup not complete
+        localStorage.setItem("authToken", token);
+        localStorage.setItem("tempAuthToken", token);
+        if (name) localStorage.setItem("tempUserName", name);
+        if (emailParam) localStorage.setItem("tempUserEmail", emailParam);
+        toast({
+          title: "Authentication Successful",
+          description: "Please complete your shop setup details.",
+        });
+        navigate("/setup");
       }
+    } else {
+      const existingToken = localStorage.getItem("authToken");
+      if (existingToken) navigate("/dashboard");
+    }
+  }, [navigate, toast]);
 
-      setIsLoading(false);
-    }, 700);
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    // Redirect directly to the Node/Express backend's Developer Bypass URL
+    console.log("Auth: Redirecting to backend developer bypass login...");
+    window.location.href = `${API_BASE_URL}/owner/auth/google?bypass=true`;
   };
 
   return (
@@ -201,17 +211,6 @@ const Auth = () => {
                     "Sign In to Admin Panel"
                   )}
                 </Button>
-
-                {/* Demo credentials hint */}
-                <div className="border border-white/10 rounded-xl p-3.5 space-y-1.5 bg-white/5">
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Demo Credentials</p>
-                  <p className="text-[11px] text-slate-400 font-mono">
-                    <span className="text-slate-300">Email:</span> admin@gharsekro.com
-                  </p>
-                  <p className="text-[11px] text-slate-400 font-mono">
-                    <span className="text-slate-300">Password:</span> admin123
-                  </p>
-                </div>
 
               </form>
             </CardContent>

@@ -1,5 +1,4 @@
-// ── DUMMY MODE — Backend Disconnected ────────────────────────
-export const API_BASE_URL = "__BACKEND_DISABLED__";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
 
 export const API_ENDPOINTS = {};
 
@@ -10,13 +9,42 @@ export const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-// Blocked stubs — will never reach backend
-export const apiCall = async (endpoint) => {
-  console.warn(`[DUMMY MODE] apiCall blocked: ${endpoint}`);
-  throw new Error("Backend disconnected");
+// Real network request helper using fetch
+export const apiCall = async (endpoint, options = {}) => {
+  const url = getApiUrl(endpoint);
+  const headers = {
+    ...getAuthHeaders(),
+    ...options.headers,
+  };
+  
+  if (!(options.body instanceof FormData) && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    let errMsg = `Request failed: ${response.status}`;
+    try {
+      const errJson = JSON.parse(errText);
+      errMsg = errJson.message || errMsg;
+    } catch {
+      errMsg = errText || errMsg;
+    }
+    throw new Error(errMsg);
+  }
+
+  return response.json();
 };
 
-export const apiCallFormData = async (endpoint) => {
-  console.warn(`[DUMMY MODE] apiCallFormData blocked: ${endpoint}`);
-  throw new Error("Backend disconnected");
+export const apiCallFormData = async (endpoint, formData, options = {}) => {
+  return apiCall(endpoint, {
+    ...options,
+    method: options.method || "POST",
+    body: formData,
+  });
 };

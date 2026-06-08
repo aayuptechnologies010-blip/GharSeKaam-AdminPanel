@@ -32,7 +32,8 @@ import {
   Loader2,
   Calendar,
   X,
-  Check
+  Check,
+  MapPin
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { labourService } from "@/lib/api";
@@ -408,8 +409,20 @@ const LabourServices = () => {
                       <TableCell className="py-4 font-semibold text-slate-500 text-xs">
                         {booking.phone}
                       </TableCell>
-                      <TableCell className="py-4 text-xs text-slate-500 font-medium max-w-[180px] truncate" title={booking.address}>
-                        {booking.address}
+                      <TableCell className="py-4 text-xs text-slate-500 font-medium max-w-[180px]" title={booking.address}>
+                        <div className="flex items-center gap-1.5">
+                          <span className="truncate">{booking.address}</span>
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-amber-500 hover:text-amber-600 inline-flex items-center shrink-0"
+                            title="View on Google Maps"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MapPin className="h-3.5 w-3.5" />
+                          </a>
+                        </div>
                       </TableCell>
                       <TableCell className="py-4">
                         <div className="flex items-center gap-2">

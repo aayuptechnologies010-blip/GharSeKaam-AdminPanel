@@ -706,18 +706,23 @@ const Orders = () => {
                           <p className="font-bold text-slate-800 text-sm">{order.customer?.user?.name || "GharSeKro Customer"}</p>
                           <p className="text-xs text-slate-400 font-medium flex items-center gap-1.5 flex-wrap">
                             <span>{order.deliveryAddress.city}, {order.deliveryAddress.state} - {order.deliveryAddress.pincode}</span>
-                            {order.deliveryAddress.latitude && order.deliveryAddress.longitude && (
-                              <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${order.deliveryAddress.latitude},${order.deliveryAddress.longitude}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-amber-500 hover:text-amber-600 inline-flex items-center"
-                                title="View on Google Maps"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MapPin className="h-3.5 w-3.5" />
-                              </a>
-                            )}
+                            {(() => {
+                              const addressQuery = order.deliveryAddress.latitude && order.deliveryAddress.longitude
+                                ? `${order.deliveryAddress.latitude},${order.deliveryAddress.longitude}`
+                                : `${order.deliveryAddress.flatnumber}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`;
+                              return (
+                                <a
+                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-amber-500 hover:text-amber-600 inline-flex items-center"
+                                  title="View on Google Maps"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MapPin className="h-3.5 w-3.5" />
+                                </a>
+                              );
+                            })()}
                           </p>
                         </div>
                       </TableCell>
@@ -865,19 +870,36 @@ const Orders = () => {
                                   <p><strong>City:</strong> {order.deliveryAddress.city}</p>
                                   <p><strong>State:</strong> {order.deliveryAddress.state}</p>
                                   <p><strong>Pincode:</strong> {order.deliveryAddress.pincode}</p>
-                                  {order.deliveryAddress.latitude && order.deliveryAddress.longitude && (
-                                    <div className="mt-3">
-                                      <a
-                                        href={`https://www.google.com/maps/search/?api=1&query=${order.deliveryAddress.latitude},${order.deliveryAddress.longitude}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 text-xs font-black text-amber-650 hover:text-amber-700 bg-amber-50 hover:bg-amber-105 border border-amber-200 px-3 py-1.5 rounded-xl transition-all shadow-sm"
-                                      >
-                                        <MapPin className="h-3.5 w-3.5" />
-                                        View on Maps
-                                      </a>
-                                    </div>
-                                  )}
+                                  {(() => {
+                                    const addressQuery = order.deliveryAddress.latitude && order.deliveryAddress.longitude
+                                      ? `${order.deliveryAddress.latitude},${order.deliveryAddress.longitude}`
+                                      : `${order.deliveryAddress.flatnumber}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`;
+                                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`;
+                                    return (
+                                      <div className="mt-3 space-y-2">
+                                        <div className="w-full h-36 rounded-xl overflow-hidden border border-slate-200">
+                                          <iframe
+                                            title="Delivery Location Map"
+                                            width="100%"
+                                            height="100%"
+                                            style={{ border: 0 }}
+                                            src={`https://maps.google.com/maps?q=${encodeURIComponent(addressQuery)}&z=15&output=embed`}
+                                            allowFullScreen
+                                            loading="lazy"
+                                          ></iframe>
+                                        </div>
+                                        <a
+                                          href={mapsUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-1.5 text-xs font-black text-amber-650 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-xl transition-all shadow-sm w-full justify-center"
+                                        >
+                                          <MapPin className="h-3.5 w-3.5" />
+                                          Open in Google Maps
+                                        </a>
+                                      </div>
+                                    );
+                                  })()}
                                 </div>
                               </div>
 
