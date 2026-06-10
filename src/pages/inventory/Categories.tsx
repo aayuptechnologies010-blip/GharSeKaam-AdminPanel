@@ -67,8 +67,7 @@ const Categories = () => {
         // Transform API data to match our interface
         const transformedCategories = response.categories.map((cat: any) => ({
           ...cat,
-          name: cat.title, // Map title to name for backwards compatibility
-          itemCount: 0 // API doesn't provide item count yet
+          name: cat.title
         }));
 
         setCategories(transformedCategories);

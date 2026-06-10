@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Trash2, Edit2, X, Check, ImageIcon, AlertCircle } from 'lucide-react';
+import { Upload, Trash2, Edit2, X, Check, ImageIcon, AlertCircle, GalleryHorizontal } from 'lucide-react';
 import { shopService } from "@/lib/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface ShopImage {
   id: string;
@@ -11,7 +14,6 @@ interface ShopImage {
   description: string;
   uploadedAt: string;
 }
-
 
 export default function ShopImageManager() {
   const [images, setImages] = useState<ShopImage[]>([]);
@@ -24,16 +26,13 @@ export default function ShopImageManager() {
   const [newDescription, setNewDescription] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchImages();
-  }, []);
+  useEffect(() => { fetchImages(); }, []);
 
   const fetchImages = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await shopService.getShopImages();
-      
       if (data.success) {
         setImages(data.images || []);
       } else {
@@ -41,7 +40,6 @@ export default function ShopImageManager() {
       }
     } catch (err) {
       setError('Error loading images');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -51,21 +49,16 @@ export default function ShopImageManager() {
     const file = e.target.files?.[0];
     if (file) {
       setNewImage(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpload = async () => {
     if (!newImage) return;
-
     try {
       setUploading(true);
       setError(null);
-      
       const data = await shopService.addShopImage(newImage, newDescription);
-      
       if (data.success && data.shopImage) {
         setImages([data.shopImage, ...images]);
         setNewImage(null);
@@ -74,9 +67,8 @@ export default function ShopImageManager() {
       } else {
         setError('Failed to upload image');
       }
-    } catch (err) {
+    } catch {
       setError('Error uploading image');
-      console.error(err);
     } finally {
       setUploading(false);
     }
@@ -86,7 +78,6 @@ export default function ShopImageManager() {
     try {
       setError(null);
       const data = await shopService.updateShopImage(id, editDescription);
-      
       if (data.success && data.updated) {
         setImages(images.map(img => img.id === id ? data.updated : img));
         setEditingId(null);
@@ -94,91 +85,88 @@ export default function ShopImageManager() {
       } else {
         setError('Failed to update image');
       }
-    } catch (err) {
+    } catch {
       setError('Error updating image');
-      console.error(err);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this image?')) return;
-
+    if (!confirm('Delete this image?')) return;
     try {
       setError(null);
       const data = await shopService.deleteShopImage(id);
-      
       if (data.success) {
         setImages(images.filter(img => img.id !== id));
       } else {
         setError('Failed to delete image');
       }
-    } catch (err) {
+    } catch {
       setError('Error deleting image');
-      console.error(err);
     }
   };
 
-  const startEdit = (image: ShopImage) => {
-    setEditingId(image.id);
-    setEditDescription(image.description || '');
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditDescription('');
-  };
-
   return (
-    <div className="min-h-screen bg-white p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Shop Image Manager</h1>
-          <p className="text-black">Upload and manage your shop images</p>
+    <div className="space-y-8 font-sans">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-3xl font-black bg-gradient-to-r from-slate-900 to-[#1e3a5f] bg-clip-text text-transparent">
+          Shop Image Manager
+        </h1>
+        <p className="text-slate-500 mt-1 font-medium">
+          Upload and manage your storefront banners and promotional images
+        </p>
+      </div>
+
+      {/* Error Alert */}
+      {error && (
+        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <AlertCircle className="text-red-500 shrink-0 h-4 w-4" />
+          <p className="text-red-700 text-sm font-semibold flex-1">{error}</p>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+            <X className="h-4 w-4" />
+          </button>
         </div>
+      )}
 
-        {error && (
-          <div className="mb-6 bg-red-500/20 border border-red-500 rounded-lg p-4 flex items-center gap-3">
-            <AlertCircle className="text-red-400" size={20} />
-            <p className="text-red-200">{error}</p>
-            <button onClick={() => setError(null)} className="ml-auto text-red-200 hover:text-white">
-              <X size={20} />
-            </button>
-          </div>
-        )}
-
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Upload Form */}
-        <div className="bg-black/2 backdrop-blur-lg rounded-xl p-6 mb-8 border border-black/20">
-          <h2 className="text-2xl font-semibold text-black mb-4 flex items-center gap-2">
-            <Upload size={24} />
-            Upload New Image
-          </h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-black mb-2">Select Image</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="w-full bg-black/5 border border-white/20 rounded-lg p-3 text-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600 file:text-white file:cursor-pointer hover:file:bg-purple-700"
-                required
-              />
+        <Card className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-yellow-500 to-yellow-600" />
+          <CardHeader className="border-b border-slate-100 pb-4">
+            <CardTitle className="text-lg font-black text-slate-800 flex items-center gap-2">
+              <Upload className="h-5 w-5 text-amber-500" />
+              Upload New Image
+            </CardTitle>
+            <CardDescription className="text-xs font-semibold text-slate-400">
+              Add banners, logos, or promotional images to your storefront
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 space-y-5">
+            {/* File input */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Select Image</Label>
+              <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-200 hover:border-amber-400 rounded-xl cursor-pointer bg-slate-50/50 hover:bg-amber-50/20 transition-all duration-200 group">
+                <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+                {previewUrl ? (
+                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover rounded-xl" />
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-slate-400 group-hover:text-amber-500 transition-colors">
+                    <ImageIcon className="h-8 w-8" />
+                    <span className="text-xs font-bold">Click to browse image</span>
+                  </div>
+                )}
+              </label>
+              {newImage && (
+                <p className="text-xs text-slate-500 font-semibold truncate">{newImage.name}</p>
+              )}
             </div>
 
-            {previewUrl && (
-              <div className="relative">
-                <img src={previewUrl} alt="Preview" className="w-full max-h-64 object-contain rounded-lg bg-black/20" />
-              </div>
-            )}
-
-            <div>
-              <Label className="block text-black mb-2">Image Type (Optional)</Label>
-              <Select
-                value={newDescription}
-                onValueChange={(value) => setNewDescription(value)}
-              >
-                <SelectTrigger className="w-full bg-black/2 border border-black/20 rounded-lg p-3 text-black">
-                  <SelectValue placeholder="Choose image type" />
+            {/* Image type select */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Image Type</Label>
+              <Select value={newDescription} onValueChange={setNewDescription}>
+                <SelectTrigger className="h-10 border-slate-200 focus:border-amber-400 focus:ring-amber-400 rounded-xl">
+                  <SelectValue placeholder="Choose image type..." />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Main Banner 1">Main Banner 1</SelectItem>
@@ -191,113 +179,103 @@ export default function ShopImageManager() {
               </Select>
             </div>
 
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                handleUpload(e);
-              }}
+            <Button
+              onClick={handleUpload}
               disabled={!newImage || uploading}
-              className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white font-bold rounded-xl py-5 transition-all"
             >
               {uploading ? (
-                <>Uploading...</>
+                <span className="flex items-center gap-2"><span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" /> Uploading...</span>
               ) : (
-                <>
-                  <Upload size={20} />
-                  Upload Image
-                </>
+                <span className="flex items-center gap-2"><Upload className="h-4 w-4" /> Upload Image</span>
               )}
-            </button>
-          </div>
-        </div>
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Image Gallery */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-          <h2 className="text-2xl font-semibold text-white mb-6 flex items-center gap-2">
-            <ImageIcon size={24} />
-            Your Images ({images.length})
-          </h2>
-
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
-              <p className="text-purple-200 mt-4">Loading images...</p>
-            </div>
-          ) : images.length === 0 ? (
-            <div className="text-center py-12">
-              <ImageIcon size={48} className="mx-auto text-purple-300 mb-4" />
-              <p className="text-purple-200">No images uploaded yet</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {images.map((image) => (
-                <div key={image.id} className="bg-white/5 rounded-lg overflow-hidden border border-white/10 hover:border-purple-400 transition-all">
-                  <div className="aspect-video bg-black/20 relative">
-                    <img
-                      src={image.imageurl}
-                      alt={image.description || 'Shop image'}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  
-                  <div className="p-4">
-                    {editingId === image.id ? (
-                      <div className="space-y-3">
-                        <input
-                          type="text"
-                          value={editDescription}
-                          onChange={(e) => setEditDescription(e.target.value)}
-                          placeholder="Description"
-                          className="w-full bg-white/10 border border-white/20 rounded p-2 text-black placeholder-purple-300/50 focus:outline-none focus:border-purple-400"
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleUpdate(image.id)}
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded flex items-center justify-center gap-2"
-                          >
-                            <Check size={16} />
-                            Save
-                          </button>
-                          <button
-                            onClick={cancelEdit}
-                            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded flex items-center justify-center gap-2"
-                          >
-                            <X size={16} />
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-black font-medium mb-2 line-clamp-2">
-                          {image.description || 'No description'}
-                        </p>
-                        <p className="text-black-300 text-sm mb-4">
-                          {new Date(image.uploadedAt).toLocaleDateString()}
-                        </p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => startEdit(image)}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded flex items-center justify-center gap-2"
-                          >
-                            <Edit2 size={16} />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(image.id)}
-                            className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded flex items-center justify-center gap-2"
-                          >
-                            <Trash2 size={16} />
-                            Delete
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
+        <div className="lg:col-span-2">
+          <Card className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-yellow-500 to-yellow-600" />
+            <CardHeader className="border-b border-slate-100 pb-4">
+              <CardTitle className="text-lg font-black text-slate-800 flex items-center gap-2">
+                <GalleryHorizontal className="h-5 w-5 text-amber-500" />
+                Your Images
+                <Badge className="ml-1 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold">
+                  {images.length} uploaded
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="aspect-video rounded-xl bg-slate-100 animate-pulse" />
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+              ) : images.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-slate-400 space-y-3">
+                  <ImageIcon className="h-14 w-14 text-slate-200" />
+                  <p className="font-bold text-slate-500">No images uploaded yet</p>
+                  <p className="text-xs text-slate-400">Upload your first banner using the form on the left</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {images.map((image) => (
+                    <div key={image.id} className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden hover:border-amber-300 hover:shadow-md transition-all duration-200">
+                      <div className="aspect-video bg-slate-100 overflow-hidden">
+                        <img
+                          src={image.imageurl}
+                          alt={image.description || 'Shop image'}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="p-3 space-y-2">
+                        {editingId === image.id ? (
+                          <div className="space-y-2">
+                            <input
+                              type="text"
+                              value={editDescription}
+                              onChange={(e) => setEditDescription(e.target.value)}
+                              placeholder="Image description"
+                              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-amber-400"
+                            />
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => handleUpdate(image.id)} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-8 text-xs font-bold gap-1">
+                                <Check className="h-3.5 w-3.5" /> Save
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => { setEditingId(null); setEditDescription(''); }} className="flex-1 h-8 text-xs font-bold rounded-lg">
+                                <X className="h-3.5 w-3.5" /> Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-slate-700 truncate max-w-[160px]">
+                                {image.description || 'No label'}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-medium shrink-0">
+                                {new Date(image.uploadedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                              </span>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" onClick={() => { setEditingId(image.id); setEditDescription(image.description || ''); }} className="flex-1 h-8 text-xs font-bold rounded-lg border-slate-200 hover:border-blue-400 hover:text-blue-600 gap-1">
+                                <Edit2 className="h-3.5 w-3.5" /> Edit
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleDelete(image.id)} className="flex-1 h-8 text-xs font-bold rounded-lg border-slate-200 hover:border-red-400 hover:text-red-600 gap-1">
+                                <Trash2 className="h-3.5 w-3.5" /> Delete
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

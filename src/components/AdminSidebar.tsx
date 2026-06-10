@@ -72,7 +72,7 @@ const menuItems = [
   },
   {
     title: "Shop Images",
-    url: "inventory/upload-shop-image",
+    url: "/inventory/upload-shop-image",
     icon: GalleryHorizontal,
     color: "from-yellow-500 to-yellow-600"
   },

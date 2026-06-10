@@ -26,9 +26,6 @@ import {
   Loader2,
   ShieldCheck,
   ArrowLeft,
-  Lock,
-  Eye,
-  EyeOff,
   KeyRound,
 } from "lucide-react";
 
@@ -63,11 +60,7 @@ const Profile = () => {
     shopname: "",
   });
 
-  // Change Password state
-  const [pwForm, setPwForm] = useState({ current: "", newPw: "", confirm: "" });
-  const [pwShow, setPwShow] = useState({ current: false, newPw: false, confirm: false });
-  const [pwLoading, setPwLoading] = useState(false);
-  const [pwError, setPwError] = useState<string | null>(null);
+
 
   // Fetch profile from database
   useEffect(() => {
@@ -164,45 +157,7 @@ const Profile = () => {
     }
   };
 
-  const handleChangePassword = () => {
-    setPwError(null);
-    const { current, newPw, confirm } = pwForm;
 
-    if (!current || !newPw || !confirm) {
-      setPwError("Please fill all password fields.");
-      return;
-    }
-    if (newPw.length < 6) {
-      setPwError("New password must be at least 6 characters.");
-      return;
-    }
-    if (newPw !== confirm) {
-      setPwError("New passwords do not match.");
-      return;
-    }
-
-    // Verify current password against stored credentials
-    const storedEmail = localStorage.getItem("userEmail") || "";
-    // Import credentials check — stored in Auth.tsx ADMIN_CREDENTIALS
-    // We store hashed check in localStorage on login for dummy mode
-    const storedPassword = localStorage.getItem("adminPassword") || "admin123";
-    if (current !== storedPassword) {
-      setPwError("Current password is incorrect.");
-      return;
-    }
-
-    setPwLoading(true);
-    setTimeout(() => {
-      // Save new password in localStorage (dummy mode)
-      localStorage.setItem("adminPassword", newPw);
-      setPwForm({ current: "", newPw: "", confirm: "" });
-      setPwLoading(false);
-      toast({
-        title: "Password Changed ✓",
-        description: "Your password has been updated successfully.",
-      });
-    }, 700);
-  };
 
   const handleCancel = () => {
     if (profile) {
@@ -467,89 +422,28 @@ const Profile = () => {
         </CardContent>
       </Card>
 
-      {/* Change Password Card */}
+      {/* Auth Info Card */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-slate-800 text-base">
-            <div className="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center">
-              <KeyRound className="h-4 w-4 text-red-600" />
+            <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+              <KeyRound className="h-4 w-4 text-blue-600" />
             </div>
-            Change Password
+            Account Security
           </CardTitle>
-          <CardDescription>Update your admin panel login password</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 max-w-md">
-
-          {pwError && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-              <X className="h-4 w-4 text-red-500 shrink-0" />
-              <p className="text-sm text-red-600 font-medium">{pwError}</p>
-            </div>
-          )}
-
-          {/* Current Password */}
-          <div className="space-y-1.5">
-            <Label className="text-slate-600 text-xs font-semibold uppercase tracking-wide">Current Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type={pwShow.current ? "text" : "password"}
-                value={pwForm.current}
-                onChange={(e) => { setPwForm(p => ({ ...p, current: e.target.value })); setPwError(null); }}
-                placeholder="Enter current password"
-                className="w-full pl-10 pr-10 h-10 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 bg-white"
-              />
-              <button type="button" onClick={() => setPwShow(s => ({ ...s, current: !s.current }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                {pwShow.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+        <CardContent>
+          <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl p-4">
+            <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-800">
+              <p className="font-bold">Secured via Google OAuth</p>
+              <p className="text-blue-600 text-xs mt-1 leading-relaxed">
+                Your account is authenticated through Google. Password management is handled by Google — visit
+                {" "}<a href="https://myaccount.google.com/security" target="_blank" rel="noopener noreferrer" className="underline font-semibold hover:text-blue-800">myaccount.google.com</a>{" "}
+                to update your credentials.
+              </p>
             </div>
           </div>
-
-          {/* New Password */}
-          <div className="space-y-1.5">
-            <Label className="text-slate-600 text-xs font-semibold uppercase tracking-wide">New Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type={pwShow.newPw ? "text" : "password"}
-                value={pwForm.newPw}
-                onChange={(e) => { setPwForm(p => ({ ...p, newPw: e.target.value })); setPwError(null); }}
-                placeholder="Enter new password (min 6 chars)"
-                className="w-full pl-10 pr-10 h-10 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 bg-white"
-              />
-              <button type="button" onClick={() => setPwShow(s => ({ ...s, newPw: !s.newPw }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                {pwShow.newPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Confirm Password */}
-          <div className="space-y-1.5">
-            <Label className="text-slate-600 text-xs font-semibold uppercase tracking-wide">Confirm New Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type={pwShow.confirm ? "text" : "password"}
-                value={pwForm.confirm}
-                onChange={(e) => { setPwForm(p => ({ ...p, confirm: e.target.value })); setPwError(null); }}
-                placeholder="Re-enter new password"
-                className="w-full pl-10 pr-10 h-10 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 bg-white"
-              />
-              <button type="button" onClick={() => setPwShow(s => ({ ...s, confirm: !s.confirm }))} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                {pwShow.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          <Button
-            onClick={handleChangePassword}
-            disabled={pwLoading}
-            className="bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl gap-2 mt-2"
-          >
-            {pwLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-            {pwLoading ? "Updating..." : "Update Password"}
-          </Button>
-
         </CardContent>
       </Card>
     </div>
