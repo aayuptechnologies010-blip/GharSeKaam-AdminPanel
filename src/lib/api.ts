@@ -214,6 +214,20 @@ export const orderService = {
     });
   },
 
+  getDeliveryGuys: async () => {
+    return apiFetch("/owner/orders/delivery-guys");
+  },
+
+  assignOrder: async (orderId: string, deliveryGuyId: string) => {
+    return apiFetch(`/owner/orders/${orderId}/assign`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ deliveryGuyId })
+    });
+  },
+
   deleteOrder: async (_orderId: string) => {
     // Backend doesn't support order deletion; return stub success response
     return { success: true };

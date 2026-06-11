@@ -119,6 +119,71 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
+  // Establish WebSocket connection for real-time dashboard updates
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    let shopkeeperId = '';
+    try {
+      const payloadBase64 = token.split('.')[1];
+      const payloadDecoded = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
+      shopkeeperId = payloadDecoded.shopkeeperid || payloadDecoded.userid || '';
+    } catch (e) {
+      console.error("Failed to decode token for WS dashboard:", e);
+    }
+
+    if (!shopkeeperId) return;
+
+    const wsUrl = `ws://localhost:3000/?role=owner&id=${shopkeeperId}`;
+    console.log("[WS Dashboard] Connecting to:", wsUrl);
+
+    let ws: WebSocket | null = null;
+
+    try {
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log("[WS Dashboard] Connected as owner", shopkeeperId);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.event === 'NEW_ORDER') {
+            toast({
+              title: "🚨 New Order Placed!",
+              description: `A new order #${payload.data.id.slice(-8)} has been placed!`,
+            });
+            // Reload dashboard data
+            fetchDashboardData();
+          } else if (payload.event === 'ORDER_STATUS_UPDATE') {
+            // Reload dashboard data
+            fetchDashboardData();
+          }
+        } catch (err) {
+          console.error("[WS Dashboard] Error handling message:", err);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.log("[WS Dashboard] Error:", err);
+      };
+
+      ws.onclose = () => {
+        console.log("[WS Dashboard] Disconnected");
+      };
+    } catch (err) {
+      console.error("[WS Dashboard] Connection error:", err);
+    }
+
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, [toast]);
+
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);

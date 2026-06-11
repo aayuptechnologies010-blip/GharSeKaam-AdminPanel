@@ -74,6 +74,15 @@ interface Order {
     longitude?: number | string | null;
   };
   estimatedDelivery?: string;
+  deliveryGuyId?: string | null;
+  deliveryGuy?: {
+    id: string;
+    user?: {
+      name: string;
+      phone: string;
+      profileimage: string;
+    }
+  } | null;
 }
 
 interface EstimatedDeliveryPickerProps {
@@ -345,6 +354,7 @@ const EstimatedDeliveryPicker = ({ orderId, currentValue, onUpdate }: EstimatedD
 const Orders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [riders, setRiders] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
@@ -357,7 +367,190 @@ const Orders = () => {
 
   useEffect(() => {
     fetchOrders();
+    fetchRiders();
   }, []);
+
+  const fetchRiders = async () => {
+    try {
+      const response = await orderService.getDeliveryGuys();
+      if (response.success && response.riders) {
+        setRiders(response.riders);
+      }
+    } catch (err) {
+      console.error("Failed to load riders:", err);
+    }
+  };
+
+  // Establish WebSocket connection for real-time shopkeeper updates
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+
+    let shopkeeperId = '';
+    try {
+      const payloadBase64 = token.split('.')[1];
+      const payloadDecoded = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
+      shopkeeperId = payloadDecoded.shopkeeperid || payloadDecoded.userid || '';
+    } catch (e) {
+      console.error("Failed to decode token for WS:", e);
+    }
+
+    if (!shopkeeperId) return;
+
+    const wsUrl = `ws://localhost:3000/?role=owner&id=${shopkeeperId}`;
+    console.log("[WS Connection] Shopkeeper connecting to:", wsUrl);
+
+    let ws: WebSocket | null = null;
+
+    try {
+      ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log("[WS Client] Connected to socket as owner", shopkeeperId);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          console.log("[WS Client] Received message:", payload);
+          if (payload.event === 'NEW_ORDER') {
+            toast({
+              title: "🚨 New Order Placed!",
+              description: `A new order #${payload.data.id.slice(-8)} has been placed!`,
+            });
+            fetchOrders();
+          } else if (payload.event === 'ORDER_STATUS_UPDATE' && payload.data) {
+            const updated = payload.data;
+            toast({
+              title: "Order Status Changed",
+              description: `Order #${updated.id.slice(-8)} status is now ${updated.status}.`,
+            });
+            setOrders((prev) =>
+              prev.map((o) =>
+                o.id === updated.id
+                  ? { ...o, status: updated.status, estimatedDelivery: updated.estimatedDelivery, deliveryGuy: updated.deliveryGuy || o.deliveryGuy }
+                  : o
+              )
+            );
+          }
+        } catch (err) {
+          console.error("[WS Client] Error handling message:", err);
+        }
+      };
+
+      ws.onerror = (err) => {
+        console.error("[WS Client] Error:", err);
+      };
+
+      ws.onclose = () => {
+        console.log("[WS Client] Disconnected from server");
+      };
+    } catch (err) {
+      console.error("[WS Client] Connection error:", err);
+    }
+
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, [toast]);
+
+  const printInvoice = (order: Order) => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Invoice - Order #${order.id.slice(0, 8)}</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
+            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #ddd; padding-bottom: 20px; }
+            .logo { font-size: 24px; font-weight: bold; color: #d97706; }
+            .invoice-title { font-size: 28px; font-weight: bold; color: #1e3a5f; }
+            .details { margin: 30px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 14px; }
+            .section-title { font-weight: bold; text-transform: uppercase; font-size: 12px; color: #666; margin-bottom: 10px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+            th, td { border: 1px solid #eee; padding: 12px; text-align: left; font-size: 14px; }
+            th { background-color: #f9f9f9; font-weight: bold; }
+            .total-row { font-weight: bold; font-size: 16px; text-align: right; }
+            .total-val { color: #d97706; font-size: 20px; }
+            .footer { margin-top: 55px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 20px; }
+            @media print {
+              body { padding: 0; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="logo">BuildMart</div>
+              <div>Gorakhpur, Uttar Pradesh</div>
+            </div>
+            <div>
+              <div class="invoice-title">INVOICE</div>
+              <div>Order ID: #${order.id}</div>
+              <div>Date: ${new Date(order.createdAt).toLocaleString("en-IN")}</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+            <div style="width: 48%;">
+              <div class="section-title">Billing/Delivery Address</div>
+              <div style="font-size: 14px; line-height: 1.6;">
+                <strong>Name:</strong> ${order.customer?.user?.name || "Customer"}<br/>
+                <strong>Flat/House:</strong> ${order.deliveryAddress.flatnumber}<br/>
+                <strong>City:</strong> ${order.deliveryAddress.city}<br/>
+                <strong>State:</strong> ${order.deliveryAddress.state}<br/>
+                <strong>Pincode:</strong> ${order.deliveryAddress.pincode}
+              </div>
+            </div>
+            <div style="width: 48%; text-align: right;">
+              <div class="section-title">Payment Details</div>
+              <div style="font-size: 14px; line-height: 1.6;">
+                <strong>Payment Type:</strong> ${order.paymentType}<br/>
+                <strong>Status:</strong> ${order.status}<br/>
+                <strong>Estimated Delivery:</strong> ${order.estimatedDelivery || "N/A"}
+              </div>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th>Variant</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th style="text-align: right;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.orderItems.map(item => `
+                <tr>
+                  <td>${item.item.title}</td>
+                  <td>${item.variants?.size || "-"}</td>
+                  <td>${item.quantity} ${item.item.unit || "pcs"}</td>
+                  <td>₹${parseFloat(item.unitPrice).toLocaleString()}</td>
+                  <td style="text-align: right; font-weight: bold;">₹${parseFloat(item.lineTotal).toLocaleString()}</td>
+                </tr>
+              `).join('')}
+              <tr class="total-row">
+                <td colspan="4" style="border: none;">Total Amount:</td>
+                <td class="total-val">₹${Number(order.totalPrice).toLocaleString()}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="footer">
+            Thank you for shopping with BuildMart! For any queries, contact support@buildmart.com
+          </div>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   const fetchOrders = async () => {
     try {
@@ -724,6 +917,11 @@ const Orders = () => {
                               );
                             })()}
                           </p>
+                          {order.deliveryGuy && (
+                            <div className="text-[10px] font-black uppercase text-amber-650 bg-amber-50/50 px-2 py-0.5 rounded mt-1 border border-amber-200/50 w-fit">
+                              🏍️ Rider: {order.deliveryGuy.user?.name || "Assigned"}
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       
@@ -786,21 +984,64 @@ const Orders = () => {
                               </Button>
                             </>
                           )}                          {!isFinalStatus(order.status) && ["ACCEPT", "ACCEPTED", "DELIVERY-PICKUP", "DELIVERED"].includes(order.status) && (
-                            <Select
-                              value={order.status.toLowerCase() === "accept" ? "accepted" : order.status.toLowerCase()}
-                              onValueChange={(newStatus) => handleStatusUpdate(order.id, newStatus)}
-                              disabled={isUpdating === order.id}
-                            >
-                              <SelectTrigger className="w-36 h-9 border-slate-200 rounded-xl focus:ring-amber-400 text-xs font-bold text-slate-700">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="accepted">Accepted</SelectItem>
-                                <SelectItem value="delivery-pickup">Out for Delivery</SelectItem>
-                                <SelectItem value="delivered">Completed / Delivered</SelectItem>
-                                <SelectItem value="cancel">Cancel Order</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <div className="flex flex-col gap-1.5">
+                              <Select
+                                value={order.status.toLowerCase() === "accept" ? "accepted" : order.status.toLowerCase()}
+                                onValueChange={(newStatus) => handleStatusUpdate(order.id, newStatus)}
+                                disabled={isUpdating === order.id}
+                              >
+                                <SelectTrigger className="w-36 h-9 border-slate-200 rounded-xl focus:ring-amber-400 text-xs font-bold text-slate-700">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="accepted">Accepted</SelectItem>
+                                  <SelectItem value="delivery-pickup">Out for Delivery</SelectItem>
+                                  <SelectItem value="delivered">Completed / Delivered</SelectItem>
+                                  <SelectItem value="cancel">Cancel Order</SelectItem>
+                                </SelectContent>
+                              </Select>
+
+                              {/* Rider Assignment Dropdown next to Status Dropdown */}
+                              {["ACCEPT", "ACCEPTED"].includes(order.status) && (
+                                <Select
+                                  value={order.deliveryGuyId || "unassigned"}
+                                  onValueChange={async (riderId) => {
+                                    if (riderId === "unassigned") return;
+                                    try {
+                                      setIsUpdating(order.id);
+                                      await orderService.assignOrder(order.id, riderId);
+                                      setOrders(prev => prev.map(o => o.id === order.id ? { ...o, deliveryGuyId: riderId } : o));
+                                      toast({
+                                        title: "Rider Assigned",
+                                        description: "Rider successfully assigned to order",
+                                      });
+                                      fetchOrders();
+                                    } catch (err) {
+                                      toast({
+                                        title: "Assignment Failed",
+                                        description: err instanceof Error ? err.message : "Failed to assign rider",
+                                        variant: "destructive"
+                                      });
+                                    } finally {
+                                      setIsUpdating(null);
+                                    }
+                                  }}
+                                  disabled={isUpdating === order.id}
+                                >
+                                  <SelectTrigger className="w-36 h-9 border-slate-200 rounded-xl focus:ring-amber-400 text-xs font-bold text-slate-700 bg-amber-50/50 hover:bg-amber-50">
+                                    <SelectValue placeholder="Assign Rider..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                                    {riders.map((r) => (
+                                      <SelectItem key={r.id} value={r.id}>
+                                        {r.user.name} ({r.status === "AVAILABLE" ? "Idle" : r.status})
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            </div>
                           )}
                           
                           {isFinalStatus(order.status) && (
@@ -811,23 +1052,39 @@ const Orders = () => {
                       
                       {/* Invoice Details Dialog */}
                       <TableCell className="py-4 pr-6 text-right">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="hover:bg-amber-50 hover:text-amber-600 rounded-xl">
-                              <Eye className="h-4.5 w-4.5" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl p-0 max-h-[90vh] overflow-y-auto">
-                            
-                            {/* Indian flag strip */}
-                            <div className="h-1.5 bg-gradient-to-r from-orange-500 via-white to-green-500" />
-                            
-                            <div className="p-6 md:p-8 space-y-6">
-                              <DialogHeader>
-                                <DialogTitle className="text-xl font-black text-slate-800">
-                                  Order Invoice details
-                                </DialogTitle>
-                              </DialogHeader>
+                        <div className="flex justify-end gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Print Invoice"
+                            onClick={() => printInvoice(order)}
+                            className="hover:bg-amber-50 hover:text-amber-600 rounded-xl h-8 w-8"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-printer"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+                          </Button>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="hover:bg-amber-50 hover:text-amber-600 rounded-xl h-8 w-8">
+                                <Eye className="h-4.5 w-4.5" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl p-0 max-h-[90vh] overflow-y-auto">
+                              
+                              {/* Indian flag strip */}
+                              <div className="h-1.5 bg-gradient-to-r from-orange-500 via-white to-green-500" />
+                              
+                              <div className="p-6 md:p-8 space-y-6">
+                                <DialogHeader className="flex flex-row items-center justify-between pr-6">
+                                  <DialogTitle className="text-xl font-black text-slate-800">
+                                    Order Invoice details
+                                  </DialogTitle>
+                                  <Button
+                                    onClick={() => printInvoice(order)}
+                                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs gap-1.5 h-8 px-3 rounded-lg shadow-sm"
+                                  >
+                                    Download Invoice
+                                  </Button>
+                                </DialogHeader>
                               
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 border border-slate-100 p-5 rounded-2xl text-sm leading-relaxed text-slate-600">
                                 <div>
@@ -944,7 +1201,8 @@ const Orders = () => {
                             </div>
                           </DialogContent>
                         </Dialog>
-                      </TableCell>
+                      </div>
+                    </TableCell>
 
                     </TableRow>
                   ))}
