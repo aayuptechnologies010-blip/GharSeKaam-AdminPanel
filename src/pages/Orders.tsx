@@ -69,7 +69,7 @@ interface Order {
     city: string;
     state: string;
     pincode: string;
-    flatnumber: number;
+    flatnumber: string;
     latitude?: number | string | null;
     longitude?: number | string | null;
   };

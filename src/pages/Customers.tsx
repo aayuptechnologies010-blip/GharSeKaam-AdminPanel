@@ -40,7 +40,7 @@ interface OrderLog {
 
 interface Address {
   id: string;
-  flatnumber: number;
+  flatnumber: string;
   city: string;
   state: string;
   pincode: string;

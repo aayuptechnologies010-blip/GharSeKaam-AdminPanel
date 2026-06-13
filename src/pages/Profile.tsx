@@ -35,7 +35,7 @@ interface ProfileData {
     city: string;
     state: string;
     pincode: string;
-    flatnumber: number;
+    flatnumber: string;
   }[];
   user: {
     name: string;

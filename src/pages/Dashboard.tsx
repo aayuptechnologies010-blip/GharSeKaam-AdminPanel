@@ -56,7 +56,7 @@ interface RecentOrder {
     city: string;
     state: string;
     pincode: string;
-    flatnumber: number;
+    flatnumber: string;
   };
 }
 
