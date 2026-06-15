@@ -120,45 +120,41 @@ export const itemService = {
   },
 
   updateItem: async (id: string, itemData: any) => {
-    const hasFiles = itemData.images && Array.isArray(itemData.images) && itemData.images.some((f: any) => f instanceof File);
+    const formData = new FormData();
+    const textFields = [
+      "title", "description", "categoryId", "wholesaleprice", "retailprice",
+      "unit", "availability", "currentQty", "warranty", "addons", "discount",
+      "minimumPurchase", "variants"
+    ];
     
-    if (hasFiles) {
-      const formData = new FormData();
-      const textFields = [
-        "title", "description", "categoryId", "wholesaleprice", "retailprice",
-        "unit", "availability", "currentQty", "warranty", "addons", "discount",
-        "minimumPurchase", "variants"
-      ];
-      textFields.forEach(field => {
-        if (itemData[field] !== undefined && itemData[field] !== null) {
-          let key = field;
-          if (field === "minimumPurchase") key = "minimumpurchase";
-          formData.append(key, String(itemData[field]));
+    textFields.forEach(field => {
+      if (itemData[field] !== undefined && itemData[field] !== null) {
+        let key = field;
+        if (field === "minimumPurchase") key = "minimumpurchase";
+        formData.append(key, String(itemData[field]));
+      }
+    });
+
+    // Append image files
+    if (itemData.images && Array.isArray(itemData.images)) {
+      itemData.images.forEach((file: File) => {
+        if (file instanceof File && file.name !== "__url__") {
+          formData.append("images", file);
         }
       });
-      itemData.images.forEach((file: File) => {
-        if (file instanceof File) formData.append("images", file);
-      });
-      return apiFetch(`/owner/inventory/item/${id}`, {
-        method: "PUT",
-        body: formData
-      });
-    } else {
-      // Send as JSON
-      const jsonBody: Record<string, any> = {};
-      Object.keys(itemData).forEach(key => {
-        let apiKey = key;
-        if (key === "minimumPurchase") apiKey = "minimumpurchase";
-        jsonBody[apiKey] = itemData[key];
-      });
-      return apiFetch(`/owner/inventory/item/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(jsonBody)
+    }
+
+    // Append imageUrls
+    if (itemData.imageUrls && Array.isArray(itemData.imageUrls)) {
+      itemData.imageUrls.forEach((url: string) => {
+        formData.append("imageUrls", url);
       });
     }
+
+    return apiFetch(`/owner/inventory/item/${id}`, {
+      method: "PUT",
+      body: formData
+    });
   },
 
   addQuantity: async (itemId: string, quantity: string) => {

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Package, Plus, X } from "lucide-react";
+import { ArrowLeft, Save, Package, Plus, X, Upload } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { itemService, categoryService } from "@/lib/api";
@@ -48,6 +48,39 @@ const EditItem = () => {
 
   // Manage variant rows separately (similar to AddItem)
   const [variants, setVariants] = useState<Variant[]>([]);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageUrlInput, setImageUrlInput] = useState("");
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setSelectedImages(prevImages => [...prevImages, ...files]);
+
+      // Create previews
+      files.forEach((file: File) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImagePreviews(prev => [...prev, e.target?.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addImageFromUrl = () => {
+    const url = imageUrlInput.trim();
+    if (!url) return;
+    setImagePreviews(prev => [...prev, url]);
+    // Push a dummy marker so selectedImages count stays in sync
+    setSelectedImages(prev => [...prev, new File([], "__url__") as File]);
+    setImageUrlInput("");
+  };
 
   useEffect(() => {
     // Load item data from location state if available
@@ -87,6 +120,12 @@ const EditItem = () => {
           console.warn("Unable to parse item variants", e);
         }
       }
+
+      // initialize images if present
+      if (item.images && Array.isArray(item.images)) {
+        setImagePreviews(item.images);
+        setSelectedImages(item.images.map(() => new File([], "__url__") as File));
+      }
     }
 
     // Load categories
@@ -120,7 +159,14 @@ const EditItem = () => {
 
     try {
       // prepare payload with variants string if present
-      const payload = { ...itemData } as any;
+      const realFiles = selectedImages.filter(f => f.name !== "__url__");
+      const urlImages = imagePreviews.filter((_, i) => selectedImages[i]?.name === "__url__");
+
+      const payload = {
+        ...itemData,
+        images: realFiles,
+        imageUrls: urlImages
+      } as any;
       if (variants.length > 0) {
         payload.variants = JSON.stringify(
           variants.map(v => {
@@ -201,6 +247,74 @@ const EditItem = () => {
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Image Upload Section */}
+              <div className="space-y-2">
+                <Label htmlFor="images">Product Images</Label>
+
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-muted-foreground/50 transition-colors">
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Click to upload product images (multiple allowed)
+                  </p>
+                  <Input
+                    id="images"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('images')?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Choose Images
+                  </Button>
+                </div>
+
+                {/* Online Image URL Input */}
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    placeholder="Ya online image URL paste karo (https://...)"
+                    value={imageUrlInput}
+                    onChange={(e) => setImageUrlInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addImageFromUrl())}
+                    className="shadow-admin-sm"
+                  />
+                  <Button type="button" variant="outline" onClick={addImageFromUrl}>
+                    <Plus className="h-4 w-4 mr-1" /> Add URL
+                  </Button>
+                </div>
+
+                {/* Image Previews */}
+                {imagePreviews.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative">
+                        <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => removeImage(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="title">Item Title *</Label>
