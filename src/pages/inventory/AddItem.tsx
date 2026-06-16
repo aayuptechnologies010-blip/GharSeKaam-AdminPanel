@@ -50,10 +50,17 @@ const AddItem = () => {
   // Unit options as per API enum
   const unitOptions = [
     { value: "PIECE", label: "Piece" },
-    { value: "KG", label: "Kilogram" },
+    { value: "KG", label: "Kilogram (KG)" },
     { value: "LITRE", label: "Litre" },
     { value: "GRAM", label: "Gram" },
     { value: "PACK", label: "Pack" },
+    { value: "BAG", label: "Bag (Bori / बैग)" },
+    { value: "CFT", label: "Cubic Feet (CFT / घन फुट)" },
+    { value: "TON", label: "Ton (टन)" },
+    { value: "TROLLEY", label: "Trolley (ट्रॉली)" },
+    { value: "BRASS", label: "Brass (ब्रास)" },
+    { value: "BUNDLE", label: "Bundle (बंडल)" },
+    { value: "TRUCK", label: "Truck (ट्रक)" },
     { value: "OTHER", label: "Other" }
   ];
 

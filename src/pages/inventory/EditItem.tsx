@@ -21,7 +21,21 @@ interface Variant {
   bundleWholesalePrice: string;  // Wholesale price for full bundle
 }
 
-const UNITS = ["PIECE", "KG", "LITRE", "GRAM", "PACK", "OTHER"];
+const unitOptions = [
+  { value: "PIECE", label: "Piece" },
+  { value: "KG", label: "Kilogram (KG)" },
+  { value: "LITRE", label: "Litre" },
+  { value: "GRAM", label: "Gram" },
+  { value: "PACK", label: "Pack" },
+  { value: "BAG", label: "Bag (Bori / बैग)" },
+  { value: "CFT", label: "Cubic Feet (CFT / घन फुट)" },
+  { value: "TON", label: "Ton (टन)" },
+  { value: "TROLLEY", label: "Trolley (ट्रॉली)" },
+  { value: "BRASS", label: "Brass (ब्रास)" },
+  { value: "BUNDLE", label: "Bundle (बंडल)" },
+  { value: "TRUCK", label: "Truck (ट्रक)" },
+  { value: "OTHER", label: "Other" }
+];
 
 const EditItem = () => {
   const navigate = useNavigate();
@@ -402,9 +416,9 @@ const EditItem = () => {
                       <SelectValue placeholder="Select unit" />
                     </SelectTrigger>
                     <SelectContent>
-                      {UNITS.map((unit) => (
-                        <SelectItem key={unit} value={unit}>
-                          {unit}
+                      {unitOptions.map((unit) => (
+                        <SelectItem key={unit.value} value={unit.value}>
+                          {unit.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
