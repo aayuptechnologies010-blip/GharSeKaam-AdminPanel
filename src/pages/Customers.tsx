@@ -325,7 +325,7 @@ const Customers = () => {
                         {selectedCustomer.orders.map((order) => (
                           <TableRow key={order.id} className="hover:bg-slate-50 transition-colors">
                             <TableCell className="font-semibold text-slate-900 pl-6">
-                              #{order.id.slice(0, 8).toUpperCase()}...
+                              #{order.id.length > 8 ? `${order.id.slice(0, 8).toUpperCase()}...` : order.id.toUpperCase()}
                             </TableCell>
                             <TableCell className="text-slate-500 text-sm">
                               {new Date(order.createdAt).toLocaleDateString(undefined, {

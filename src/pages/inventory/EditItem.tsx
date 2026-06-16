@@ -379,20 +379,6 @@ const EditItem = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wholesaleprice">Wholesale Price *</Label>
-                  <Input
-                    id="wholesaleprice"
-                    type="number"
-                    step="0.01"
-                    placeholder="Enter wholesale price"
-                    value={itemData.wholesaleprice}
-                    onChange={(e) => setItemData(prev => ({ ...prev, wholesaleprice: e.target.value }))}
-                    required
-                    className="shadow-admin-sm"
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="retailprice">Retail Price *</Label>
                   <Input
                     id="retailprice"
@@ -401,6 +387,20 @@ const EditItem = () => {
                     placeholder="Enter retail price"
                     value={itemData.retailprice}
                     onChange={(e) => setItemData(prev => ({ ...prev, retailprice: e.target.value }))}
+                    required
+                    className="shadow-admin-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="wholesaleprice">Wholesale Price *</Label>
+                  <Input
+                    id="wholesaleprice"
+                    type="number"
+                    step="0.01"
+                    placeholder="Enter wholesale price"
+                    value={itemData.wholesaleprice}
+                    onChange={(e) => setItemData(prev => ({ ...prev, wholesaleprice: e.target.value }))}
                     required
                     className="shadow-admin-sm"
                   />
@@ -458,6 +458,18 @@ const EditItem = () => {
                     placeholder="Enter discount percentage"
                     value={itemData.discount}
                     onChange={(e) => setItemData(prev => ({ ...prev, discount: e.target.value }))}
+                    className="shadow-admin-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="minimumPurchase">Minimum Purchase</Label>
+                  <Input
+                    id="minimumPurchase"
+                    type="number"
+                    placeholder="1"
+                    value={itemData.minimumPurchase}
+                    onChange={(e) => setItemData(prev => ({ ...prev, minimumPurchase: e.target.value }))}
                     className="shadow-admin-sm"
                   />
                 </div>

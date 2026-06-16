@@ -707,7 +707,7 @@ const Dashboard = () => {
                         #{order.id.toString().slice(-4)}
                       </div>
                       <div>
-                        <p className="font-bold text-slate-800 text-sm">Order #{order.id.slice(0, 12)}...</p>
+                        <p className="font-bold text-slate-800 text-sm">Order #{order.id.length > 8 ? `${order.id.slice(0, 8)}...` : order.id}</p>
                         <p className="text-xs text-slate-500 font-semibold mt-0.5">
                           Buyer: {order.customer?.user?.name || "GharSeKro Buyer"}
                         </p>

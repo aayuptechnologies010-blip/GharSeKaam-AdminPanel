@@ -41,7 +41,7 @@ const AdminLayout = () => {
             generatedNotifs.push({
               id: notifId,
               title: "New Order Received",
-              description: `Order #${order.id.slice(0, 8).toUpperCase()} has been placed by ${order.customer?.user?.name || "Customer"} (₹${Number(order.totalPrice).toLocaleString()})`,
+              description: `Order #${order.id.length > 8 ? order.id.slice(0, 8).toUpperCase() : order.id.toUpperCase()} has been placed by ${order.customer?.user?.name || "Customer"} (₹${Number(order.totalPrice).toLocaleString()})`,
               time: new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               type: "order",
               link: "/orders",

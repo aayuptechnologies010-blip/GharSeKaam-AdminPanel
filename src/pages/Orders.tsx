@@ -462,7 +462,7 @@ const Orders = () => {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Invoice - Order #${order.id.slice(0, 8)}</title>
+          <title>Invoice - Order #${order.id.length > 8 ? order.id.slice(0, 8) : order.id}</title>
           <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
             .header { display: flex; justify-content: space-between; border-bottom: 2px solid #ddd; padding-bottom: 20px; }
@@ -890,7 +890,7 @@ const Orders = () => {
                       
                       {/* ID */}
                       <TableCell className="font-extrabold text-slate-850 pl-6 text-sm py-4">
-                        #{order.id.slice(0, 8)}...
+                        #{order.id.length > 8 ? `${order.id.slice(0, 8)}...` : order.id}
                       </TableCell>
                       
                       {/* Buyer */}
