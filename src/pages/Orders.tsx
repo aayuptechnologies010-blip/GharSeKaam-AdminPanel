@@ -40,11 +40,13 @@ interface Order {
   updatedAt: string;
   customer?: {
     id: string;
+    Shopname?: string | null;
     user?: {
       name: string;
       email: string;
-    };
-  };
+      phone?: string | null;
+    } | null;
+  } | null;
   orderItems: {
     id: string;
     orderId: string;
@@ -628,7 +630,7 @@ const Orders = () => {
               <td style="width: 50%; border: none; vertical-align: top; padding: 0 0 0 15px; line-height: 1.5;">
                 <div style="font-weight: bold; font-size: 11px; margin-bottom: 5px; color: #444; text-transform: uppercase;">Billing Address :</div>
                 <div style="font-size: 11px;">
-                  <strong>${order.customer?.user?.name || "Customer"}</strong><br/>
+                  <strong>${getBuyerName(order)}</strong><br/>
                   ${order.deliveryAddress.flatnumber}, Gorakhpur<br/>
                   GORAKHPUR, UTTAR PRADESH, ${order.deliveryAddress.pincode}<br/>
                   IN
@@ -639,7 +641,7 @@ const Orders = () => {
 
                 <div style="font-weight: bold; font-size: 11px; margin-top: 15px; margin-bottom: 5px; color: #444; text-transform: uppercase;">Shipping Address :</div>
                 <div style="font-size: 11px;">
-                  <strong>${order.customer?.user?.name || "Customer"}</strong><br/>
+                  <strong>${getBuyerName(order)}</strong><br/>
                   ${order.deliveryAddress.flatnumber}, Gorakhpur<br/>
                   GORAKHPUR, UTTAR PRADESH, ${order.deliveryAddress.pincode}<br/>
                   IN
@@ -905,6 +907,23 @@ const Orders = () => {
     return ["reject", "rejected", "cancel", "cancelled"].includes(normalized);
   };
 
+  const getBuyerName = (order: Order) => {
+    const name = order.customer?.user?.name;
+    if (name && name.trim() !== "" && name.toLowerCase() !== "null" && name.toLowerCase() !== "undefined") {
+      return name;
+    }
+    if (order.customer?.Shopname && order.customer.Shopname.trim() !== "" && order.customer.Shopname.toLowerCase() !== "null" && order.customer.Shopname.toLowerCase() !== "undefined") {
+      return order.customer.Shopname;
+    }
+    if (order.customer?.user?.phone) {
+      return `Customer (${order.customer.user.phone})`;
+    }
+    if (order.customer?.user?.email) {
+      return order.customer.user.email.split("@")[0];
+    }
+    return "GharSeKro Customer";
+  };
+
   // Reset pagination on filter change
   useEffect(() => {
     setCurrentPage(1);
@@ -915,7 +934,7 @@ const Orders = () => {
     const matchesSearch =
       order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.customer?.user?.name && order.customer.user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      getBuyerName(order).toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.orderItems.some(item =>
         item.item.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -1116,7 +1135,7 @@ const Orders = () => {
                       {/* Buyer */}
                       <TableCell className="py-4">
                         <div className="space-y-0.5">
-                          <p className="font-bold text-slate-800 text-sm">{order.customer?.user?.name || "GharSeKro Customer"}</p>
+                          <p className="font-bold text-slate-800 text-sm">{getBuyerName(order)}</p>
                           <p className="text-xs text-slate-400 font-medium flex items-center gap-1.5 flex-wrap">
                             <span>{order.deliveryAddress.city}, {order.deliveryAddress.state} - {order.deliveryAddress.pincode}</span>
                             {(() => {
@@ -1457,7 +1476,7 @@ const Orders = () => {
                   {/* Buyer details */}
                   <div className="space-y-1 bg-slate-50/50 p-3 rounded-xl border border-slate-100 text-left">
                     <p className="font-bold text-slate-800 text-xs flex items-center justify-between">
-                      <span>👤 {order.customer?.user?.name || "GharSeKro Customer"}</span>
+                      <span>👤 {getBuyerName(order)}</span>
                       {(() => {
                         const addressQuery = order.deliveryAddress.latitude && order.deliveryAddress.longitude
                           ? `${order.deliveryAddress.latitude},${order.deliveryAddress.longitude}`
