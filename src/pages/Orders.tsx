@@ -72,6 +72,10 @@ interface Order {
     state: string;
     pincode: string;
     flatnumber: string;
+    landmark?: string | null;
+    building?: string | null;
+    street?: string | null;
+    area?: string | null;
     latitude?: number | string | null;
     longitude?: number | string | null;
   };
@@ -459,6 +463,51 @@ const Orders = () => {
   }, [toast]);
 
   const printInvoice = (order: Order) => {
+    const getStateCode = (stateName?: string | null): string => {
+      if (!stateName) return "09"; // Default to UP
+      const normalized = stateName.trim().toLowerCase().replace(/[^a-z]/g, "");
+      const stateCodes: Record<string, string> = {
+        jammuandkashmir: "01", jammu: "01", kashmir: "01",
+        himachalpradesh: "02", himachal: "02",
+        punjab: "03",
+        chandigarh: "04",
+        uttarakhand: "05", uttaranchal: "05",
+        haryana: "06",
+        delhi: "07", newdelhi: "07",
+        rajasthan: "08",
+        uttarpradesh: "09", up: "09",
+        bihar: "10",
+        sikkim: "11",
+        arunachalpradesh: "12", arunachal: "12",
+        nagaland: "13",
+        manipur: "14",
+        mizoram: "15",
+        tripura: "16",
+        meghalaya: "17",
+        assam: "18",
+        westbengal: "19", bengal: "19",
+        jharkhand: "20",
+        odisha: "21", orissa: "21",
+        chhattisgarh: "22", chhatisgarh: "22",
+        madhyapradesh: "23", mp: "23",
+        gujarat: "24",
+        damandiu: "25", daman: "25", diu: "25",
+        dadraandnagarhaveli: "26", dadra: "26", nagarhaveli: "26",
+        maharashtra: "27", bombay: "27",
+        andhrapradesh: "37", ap: "37",
+        karnataka: "29",
+        goa: "30",
+        lakshadweep: "31", laccadive: "31",
+        kera: "32", kerala: "32",
+        telangana: "36",
+        tamilnadu: "33", madras: "33",
+        puducherry: "34", pondicherry: "34",
+        andamanandnicobarislands: "35", andaman: "35", nicobar: "35",
+        ladakh: "38"
+      };
+      return stateCodes[normalized] || "09";
+    };
+
     const numberToWords = (num: number): string => {
       const a = [
         '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
@@ -620,7 +669,8 @@ const Orders = () => {
                   <strong>Aman Traders Store</strong><br/>
                   75, 3rd Cross, Lalbagh Road<br/>
                   GORAKHPUR, UTTAR PRADESH, 273010<br/>
-                  IN
+                  IN<br/>
+                  <strong>Mobile No:</strong> +91 89570 35082
                 </div>
                 <div style="margin-top: 10px; font-size: 10.5px; line-height: 1.4;">
                   <strong>PAN No:</strong> AACFV3325K<br/>
@@ -631,25 +681,39 @@ const Orders = () => {
                 <div style="font-weight: bold; font-size: 11px; margin-bottom: 5px; color: #444; text-transform: uppercase;">Billing Address :</div>
                 <div style="font-size: 11px;">
                   <strong>${getBuyerName(order)}</strong><br/>
-                  ${order.deliveryAddress.flatnumber}, Gorakhpur<br/>
-                  GORAKHPUR, UTTAR PRADESH, ${order.deliveryAddress.pincode}<br/>
-                  IN
+                  ${[
+                    order.deliveryAddress.flatnumber,
+                    order.deliveryAddress.building,
+                    order.deliveryAddress.street,
+                    order.deliveryAddress.area
+                  ].filter(Boolean).join(', ')}<br/>
+                  ${order.deliveryAddress.landmark ? `Landmark: ${order.deliveryAddress.landmark}<br/>` : ''}
+                  ${order.deliveryAddress.city?.toUpperCase() || 'GORAKHPUR'}, ${order.deliveryAddress.state?.toUpperCase() || 'UTTAR PRADESH'}, ${order.deliveryAddress.pincode}<br/>
+                  IN<br/>
+                  <strong>Mobile No:</strong> ${order.customer?.user?.phone || 'N/A'}
                 </div>
                 <div style="margin-top: 5px; font-size: 10.5px;">
-                  <strong>State/UT Code:</strong> 09
+                  <strong>State/UT Code:</strong> ${getStateCode(order.deliveryAddress.state)}
                 </div>
 
                 <div style="font-weight: bold; font-size: 11px; margin-top: 15px; margin-bottom: 5px; color: #444; text-transform: uppercase;">Shipping Address :</div>
                 <div style="font-size: 11px;">
                   <strong>${getBuyerName(order)}</strong><br/>
-                  ${order.deliveryAddress.flatnumber}, Gorakhpur<br/>
-                  GORAKHPUR, UTTAR PRADESH, ${order.deliveryAddress.pincode}<br/>
-                  IN
+                  ${[
+                    order.deliveryAddress.flatnumber,
+                    order.deliveryAddress.building,
+                    order.deliveryAddress.street,
+                    order.deliveryAddress.area
+                  ].filter(Boolean).join(', ')}<br/>
+                  ${order.deliveryAddress.landmark ? `Landmark: ${order.deliveryAddress.landmark}<br/>` : ''}
+                  ${order.deliveryAddress.city?.toUpperCase() || 'GORAKHPUR'}, ${order.deliveryAddress.state?.toUpperCase() || 'UTTAR PRADESH'}, ${order.deliveryAddress.pincode}<br/>
+                  IN<br/>
+                  <strong>Mobile No:</strong> ${order.customer?.user?.phone || 'N/A'}
                 </div>
                 <div style="margin-top: 5px; font-size: 10.5px; line-height: 1.4;">
-                  <strong>State/UT Code:</strong> 09<br/>
-                  <strong>Place of supply:</strong> UTTAR PRADESH<br/>
-                  <strong>Place of delivery:</strong> UTTAR PRADESH
+                  <strong>State/UT Code:</strong> ${getStateCode(order.deliveryAddress.state)}<br/>
+                  <strong>Place of supply:</strong> ${order.deliveryAddress.state?.toUpperCase() || 'UTTAR PRADESH'}<br/>
+                  <strong>Place of delivery:</strong> ${order.deliveryAddress.state?.toUpperCase() || 'UTTAR PRADESH'}
                 </div>
               </td>
             </tr>
@@ -905,6 +969,23 @@ const Orders = () => {
   const isFinalStatus = (status: string) => {
     const normalized = status.trim().toLowerCase();
     return ["reject", "rejected", "cancel", "cancelled"].includes(normalized);
+  };
+
+  const getShortCustomerId = (customerId: string) => {
+    if (!customerId) return "N/A";
+    // Generate a deterministic 6-character alphanumeric string from customerId
+    let hash = 0;
+    for (let i = 0; i < customerId.length; i++) {
+      hash = customerId.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let shortId = "";
+    let tempHash = Math.abs(hash);
+    for (let i = 0; i < 6; i++) {
+      shortId += chars[tempHash % chars.length];
+      tempHash = Math.floor(tempHash / chars.length);
+    }
+    return shortId;
   };
 
   const getBuyerName = (order: Order) => {
@@ -1329,7 +1410,7 @@ const Orders = () => {
                                 <div>
                                   <h4 className="font-extrabold text-slate-800 uppercase tracking-widest text-xs mb-3">Invoice Details</h4>
                                   <p><strong>Order ID:</strong> #{order.id}</p>
-                                  <p><strong>Customer ID:</strong> {order.customerId}</p>
+                                  <p><strong>Customer ID:</strong> {getShortCustomerId(order.customerId)}</p>
                                   <p><strong>Payment Mode:</strong> {order.paymentType}</p>
                                   <p><strong>Created:</strong> {new Date(order.createdAt).toLocaleString("en-IN")}</p>
                                   <p className="mt-2 flex items-center">
@@ -1362,6 +1443,8 @@ const Orders = () => {
                                 </div>
                                 <div>
                                   <h4 className="font-extrabold text-slate-800 uppercase tracking-widest text-xs mb-3">Delivery Address</h4>
+                                  <p><strong>Name:</strong> {getBuyerName(order)}</p>
+                                  <p><strong>Mobile:</strong> {order.customer?.user?.phone || "N/A"}</p>
                                   <p><strong>Flat/House:</strong> {order.deliveryAddress.flatnumber}</p>
                                   <p><strong>City:</strong> {order.deliveryAddress.city}</p>
                                   <p><strong>State:</strong> {order.deliveryAddress.state}</p>
@@ -1657,7 +1740,7 @@ const Orders = () => {
                             <div>
                               <h4 className="font-extrabold text-slate-800 uppercase tracking-widest text-[10px] md:text-xs mb-3">Invoice Details</h4>
                               <p><strong>Order ID:</strong> #{order.id}</p>
-                              <p><strong>Customer ID:</strong> {order.customerId}</p>
+                              <p><strong>Customer ID:</strong> {getShortCustomerId(order.customerId)}</p>
                               <p><strong>Payment Mode:</strong> {order.paymentType}</p>
                               <p><strong>Created:</strong> {new Date(order.createdAt).toLocaleString("en-IN")}</p>
                               <p className="mt-2 flex items-center">
@@ -1690,6 +1773,8 @@ const Orders = () => {
                             </div>
                             <div>
                               <h4 className="font-extrabold text-slate-800 uppercase tracking-widest text-[10px] md:text-xs mb-3">Delivery Address</h4>
+                              <p><strong>Name:</strong> {getBuyerName(order)}</p>
+                              <p><strong>Mobile:</strong> {order.customer?.user?.phone || "N/A"}</p>
                               <p><strong>Flat/House:</strong> {order.deliveryAddress.flatnumber}</p>
                               <p><strong>City:</strong> {order.deliveryAddress.city}</p>
                               <p><strong>State:</strong> {order.deliveryAddress.state}</p>
