@@ -591,7 +591,7 @@ const Orders = () => {
           </style>
         </head>
         <body>
-          {/* Repeating Watermark Layout */}
+          <!-- Repeating Watermark Layout -->
           <div class="watermark-container">
             <div class="watermark-text" style="top: 15%; left: 10%;">Aman Traders</div>
             <div class="watermark-text" style="top: 15%; left: 60%;">Aman Traders</div>
@@ -599,7 +599,7 @@ const Orders = () => {
             <div class="watermark-text" style="top: 75%; left: 10%;">Aman Traders</div>
             <div class="watermark-text" style="top: 75%; left: 60%;">Aman Traders</div>
           </div>
-          {/* Header Banner */}
+          <!-- Header Banner -->
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 15px;">
             <div style="display: flex; align-items: center; gap: 10px;">
               <img src="/logo.png" style="height: 45px; width: auto; object-fit: contain;" alt="Aman Traders" />
@@ -611,7 +611,7 @@ const Orders = () => {
             </div>
           </div>
 
-          {/* Addresses and Store Info Table */}
+          <!-- Addresses and Store Info Table -->
           <table style="width: 100%; margin-top: 20px; border: none; border-collapse: collapse;">
             <tr style="border: none;">
               <td style="width: 50%; border: none; vertical-align: top; padding: 0 15px 0 0; line-height: 1.5;">
@@ -655,7 +655,7 @@ const Orders = () => {
             </tr>
           </table>
 
-          {/* Invoice / Order Meta details */}
+          <!-- Invoice / Order Meta details -->
           <table style="width: 100%; margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px; border-collapse: collapse;">
             <tr style="border: none;">
               <td style="width: 50%; border: none; padding: 0; line-height: 1.6; font-size: 10.5px; vertical-align: top;">
@@ -670,7 +670,7 @@ const Orders = () => {
             </tr>
           </table>
 
-          {/* Amazon-style Itemized tax table */}
+          <!-- Amazon-style Itemized tax table -->
           <table class="invoice-table">
             <thead>
               <tr>
@@ -730,7 +730,7 @@ const Orders = () => {
             </tbody>
           </table>
 
-          {/* Amount in words & Signature box */}
+          <!-- Amount in words & Signature box -->
           <div style="margin-top: 35px; display: flex; justify-content: space-between; align-items: flex-start;">
             <div style="width: 55%; font-size: 11px; line-height: 1.6; text-align: left;">
               <strong>Amount in Words:</strong><br/>
