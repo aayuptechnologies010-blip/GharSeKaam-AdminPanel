@@ -34,7 +34,7 @@ interface Order {
   shopkeeperId: string;
   paymentType: string;
   totalPrice: string;
-  status: "PENDING" | "PROCESSING" | "ACCEPT" | "ACCEPTED" | "REJECT" | "REJECTED" | "CANCEL" | "CANCELLED" | "DELIVERY-PICKUP" | "DELIVERED";
+  status: "PENDING" | "PROCESSING" | "ACCEPT" | "ACCEPTED" | "REJECT" | "REJECTED" | "CANCEL" | "CANCELLED" | "DELIVERY-PICKUP" | "DELIVERY_PICKUP" | "DELIVERED";
   deliveryAddressId: string;
   createdAt: string;
   updatedAt: string;
@@ -457,25 +457,131 @@ const Orders = () => {
   }, [toast]);
 
   const printInvoice = (order: Order) => {
+    const numberToWords = (num: number): string => {
+      const a = [
+        '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+        'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'
+      ];
+      const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+      const convertLessThanOneThousand = (n: number): string => {
+        if (n === 0) return '';
+        let str = '';
+        if (n >= 100) {
+          str += a[Math.floor(n / 100)] + ' Hundred ';
+          n %= 100;
+        }
+        if (n >= 20) {
+          str += b[Math.floor(n / 10)] + ' ';
+          n %= 10;
+        }
+        if (n > 0) {
+          str += a[n] + ' ';
+        }
+        return str.trim();
+      };
+
+      if (num === 0) return 'Zero';
+      
+      let temp = Math.floor(num);
+      let words = '';
+      
+      if (Math.floor(temp / 10000000) > 0) {
+        words += convertLessThanOneThousand(Math.floor(temp / 10000000)) + ' Crore ';
+        temp %= 10000000;
+      }
+      if (Math.floor(temp / 100000) > 0) {
+        words += convertLessThanOneThousand(Math.floor(temp / 100000)) + ' Lakh ';
+        temp %= 100000;
+      }
+      if (Math.floor(temp / 1000) > 0) {
+        words += convertLessThanOneThousand(Math.floor(temp / 1000)) + ' Thousand ';
+        temp %= 1000;
+      }
+      if (temp > 0) {
+        words += convertLessThanOneThousand(temp);
+      }
+      
+      return words.trim() + ' Only';
+    };
+
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
     printWindow.document.write(`
       <html>
         <head>
-          <title>Invoice - Order #${order.id.length > 8 ? order.id.slice(0, 8) : order.id}</title>
+          <title>Tax Invoice - Order #${order.id.length > 8 ? order.id.slice(0, 8) : order.id}</title>
           <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; }
-            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #ddd; padding-bottom: 20px; }
-            .logo { font-size: 24px; font-weight: bold; color: #d97706; }
-            .invoice-title { font-size: 28px; font-weight: bold; color: #1e3a5f; }
-            .details { margin: 30px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 14px; }
-            .section-title { font-weight: bold; text-transform: uppercase; font-size: 12px; color: #666; margin-bottom: 10px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 30px; }
-            th, td { border: 1px solid #eee; padding: 12px; text-align: left; font-size: 14px; }
-            th { background-color: #f9f9f9; font-weight: bold; }
-            .total-row { font-weight: bold; font-size: 16px; text-align: right; }
-            .total-val { color: #d97706; font-size: 20px; }
-            .footer { margin-top: 55px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 20px; }
+            body {
+              font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+              color: #111;
+              margin: 0;
+              padding: 30px;
+              font-size: 11px;
+              line-height: 1.4;
+            }
+            .watermark-container {
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              z-index: -1000;
+              pointer-events: none;
+              overflow: hidden;
+              opacity: 0.035;
+            }
+            .watermark-text {
+              position: absolute;
+              font-size: 3rem;
+              font-weight: 900;
+              color: #000;
+              transform: rotate(-30deg);
+              white-space: nowrap;
+              text-transform: uppercase;
+              letter-spacing: 5px;
+            }
+            .logo-container {
+              display: inline-flex;
+              flex-direction: column;
+              align-items: flex-start;
+            }
+            .logo-text {
+              font-size: 28px;
+              font-weight: 800;
+              color: #111;
+              letter-spacing: -1.5px;
+              line-height: 0.9;
+            }
+            .dot-in {
+              color: #f59e0b;
+            }
+            .logo-arrow {
+              margin-top: -2px;
+              margin-left: 2px;
+            }
+            .invoice-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 25px;
+              font-size: 10px;
+            }
+            .invoice-table th, .invoice-table td {
+              border: 1px solid #999;
+              padding: 6px 8px;
+            }
+            .invoice-table th {
+              background-color: #f6f6f6;
+              font-weight: bold;
+              text-align: center;
+              color: #111;
+              font-size: 10.5px;
+            }
+            .invoice-table .total-row td {
+              border-top: 1.5px solid #111;
+              border-bottom: 2px double #111;
+              background-color: #fafafa;
+            }
             @media print {
               body { padding: 0; }
               button { display: none; }
@@ -483,66 +589,174 @@ const Orders = () => {
           </style>
         </head>
         <body>
-          <div class="header">
-            <div>
-              <div class="logo">BuildMart</div>
-              <div>Gorakhpur, Uttar Pradesh</div>
+          {/* Repeating Watermark Layout */}
+          <div class="watermark-container">
+            <div class="watermark-text" style="top: 15%; left: 10%;">Aman Traders</div>
+            <div class="watermark-text" style="top: 15%; left: 60%;">Aman Traders</div>
+            <div class="watermark-text" style="top: 45%; left: 35%;">Aman Traders</div>
+            <div class="watermark-text" style="top: 75%; left: 10%;">Aman Traders</div>
+            <div class="watermark-text" style="top: 75%; left: 60%;">Aman Traders</div>
+          </div>
+          {/* Header Banner */}
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <img src="/logo.png" style="height: 45px; width: auto; object-fit: contain;" alt="Aman Traders" />
+              <div style="font-size: 20px; font-weight: 800; color: #111; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing: -0.5px; text-transform: uppercase;">Aman Traders</div>
             </div>
-            <div>
-              <div class="invoice-title">INVOICE</div>
-              <div>Order ID: #${order.id}</div>
-              <div>Date: ${new Date(order.createdAt).toLocaleString("en-IN")}</div>
+            <div style="text-align: right;">
+              <h1 style="font-size: 16px; margin: 0; font-weight: 800; color: #111; text-transform: uppercase; letter-spacing: 0.5px;">Tax Invoice/Bill of Supply/Cash Memo</h1>
+              <p style="margin: 3px 0 0 0; font-size: 10px; color: #444; font-weight: bold;">(Original for Recipient)</p>
             </div>
           </div>
-          <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-            <div style="width: 48%;">
-              <div class="section-title">Billing/Delivery Address</div>
-              <div style="font-size: 14px; line-height: 1.6;">
-                <strong>Name:</strong> ${order.customer?.user?.name || "Customer"}<br/>
-                <strong>Flat/House:</strong> ${order.deliveryAddress.flatnumber}<br/>
-                <strong>City:</strong> ${order.deliveryAddress.city}<br/>
-                <strong>State:</strong> ${order.deliveryAddress.state}<br/>
-                <strong>Pincode:</strong> ${order.deliveryAddress.pincode}
-              </div>
-            </div>
-            <div style="width: 48%; text-align: right;">
-              <div class="section-title">Payment Details</div>
-              <div style="font-size: 14px; line-height: 1.6;">
-                <strong>Payment Type:</strong> ${order.paymentType}<br/>
-                <strong>Status:</strong> ${order.status}<br/>
-                <strong>Estimated Delivery:</strong> ${order.estimatedDelivery || "N/A"}
-              </div>
-            </div>
-          </div>
-          <table>
+
+          {/* Addresses and Store Info Table */}
+          <table style="width: 100%; margin-top: 20px; border: none; border-collapse: collapse;">
+            <tr style="border: none;">
+              <td style="width: 50%; border: none; vertical-align: top; padding: 0 15px 0 0; line-height: 1.5;">
+                <div style="font-weight: bold; font-size: 11px; margin-bottom: 5px; color: #444; text-transform: uppercase;">Sold By :</div>
+                <div style="font-size: 11px;">
+                  <strong>Aman Traders Store</strong><br/>
+                  75, 3rd Cross, Lalbagh Road<br/>
+                  GORAKHPUR, UTTAR PRADESH, 273010<br/>
+                  IN
+                </div>
+                <div style="margin-top: 10px; font-size: 10.5px; line-height: 1.4;">
+                  <strong>PAN No:</strong> AACFV3325K<br/>
+                  <strong>GST Registration No:</strong> 29AACFV3325K1ZY
+                </div>
+              </td>
+              <td style="width: 50%; border: none; vertical-align: top; padding: 0 0 0 15px; line-height: 1.5;">
+                <div style="font-weight: bold; font-size: 11px; margin-bottom: 5px; color: #444; text-transform: uppercase;">Billing Address :</div>
+                <div style="font-size: 11px;">
+                  <strong>${order.customer?.user?.name || "Customer"}</strong><br/>
+                  ${order.deliveryAddress.flatnumber}, Gorakhpur<br/>
+                  GORAKHPUR, UTTAR PRADESH, ${order.deliveryAddress.pincode}<br/>
+                  IN
+                </div>
+                <div style="margin-top: 5px; font-size: 10.5px;">
+                  <strong>State/UT Code:</strong> 09
+                </div>
+
+                <div style="font-weight: bold; font-size: 11px; margin-top: 15px; margin-bottom: 5px; color: #444; text-transform: uppercase;">Shipping Address :</div>
+                <div style="font-size: 11px;">
+                  <strong>${order.customer?.user?.name || "Customer"}</strong><br/>
+                  ${order.deliveryAddress.flatnumber}, Gorakhpur<br/>
+                  GORAKHPUR, UTTAR PRADESH, ${order.deliveryAddress.pincode}<br/>
+                  IN
+                </div>
+                <div style="margin-top: 5px; font-size: 10.5px; line-height: 1.4;">
+                  <strong>State/UT Code:</strong> 09<br/>
+                  <strong>Place of supply:</strong> UTTAR PRADESH<br/>
+                  <strong>Place of delivery:</strong> UTTAR PRADESH
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          {/* Invoice / Order Meta details */}
+          <table style="width: 100%; margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px; border-collapse: collapse;">
+            <tr style="border: none;">
+              <td style="width: 50%; border: none; padding: 0; line-height: 1.6; font-size: 10.5px; vertical-align: top;">
+                <strong>Order Number:</strong> 403-${order.id.slice(0, 7)}-${order.id.slice(-7)}<br/>
+                <strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString("en-IN")}
+              </td>
+              <td style="width: 50%; border: none; padding: 0; text-align: right; line-height: 1.6; font-size: 10.5px; vertical-align: top;">
+                <strong>Invoice Number:</strong> IN-${order.id.slice(-6).toUpperCase()}<br/>
+                <strong>Invoice Details:</strong> UP-${order.id.slice(0, 10).toUpperCase()}<br/>
+                <strong>Invoice Date:</strong> ${new Date(order.createdAt).toLocaleDateString("en-IN")}
+              </td>
+            </tr>
+          </table>
+
+          {/* Amazon-style Itemized tax table */}
+          <table class="invoice-table">
             <thead>
               <tr>
-                <th>Product Name</th>
-                <th>Variant</th>
-                <th>Quantity</th>
-                <th>Unit Price</th>
-                <th style="text-align: right;">Total</th>
+                <th style="width: 5%;">Sl. No</th>
+                <th style="width: 40%;">Description</th>
+                <th style="width: 9%;">Unit Price</th>
+                <th style="width: 5%;">Qty</th>
+                <th style="width: 9%;">Net Amount</th>
+                <th style="width: 8%;">Tax Rate</th>
+                <th style="width: 8%;">Tax Type</th>
+                <th style="width: 8%;">Tax Amount</th>
+                <th style="width: 10%; text-align: right;">Total Amount</th>
               </tr>
             </thead>
             <tbody>
-              ${order.orderItems.map(item => `
-                <tr>
-                  <td>${item.item.title}</td>
-                  <td>${item.variants?.size || "-"}</td>
-                  <td>${item.quantity} ${item.item.unit || "pcs"}</td>
-                  <td>₹${parseFloat(item.unitPrice).toLocaleString()}</td>
-                  <td style="text-align: right; font-weight: bold;">₹${parseFloat(item.lineTotal).toLocaleString()}</td>
-                </tr>
-              `).join('')}
+              ${order.orderItems.map((item, idx) => {
+                const total = parseFloat(item.lineTotal);
+                const net = total / 1.18;
+                const tax = total - net;
+                const halfTax = tax / 2;
+                const unitNetPrice = parseFloat(item.unitPrice) / 1.18;
+                
+                return `
+                  <tr>
+                    <td rowspan="2" style="text-align: center; vertical-align: top;">${idx + 1}</td>
+                    <td style="font-weight: bold; font-size: 10.5px;">
+                      ${item.item.title} ${item.variants?.size ? `(Size: ${item.variants.size})` : ""}
+                    </td>
+                    <td rowspan="2" style="text-align: right; vertical-align: top;">₹${unitNetPrice.toFixed(2)}</td>
+                    <td rowspan="2" style="text-align: center; vertical-align: top;">${item.quantity}</td>
+                    <td rowspan="2" style="text-align: right; vertical-align: top;">₹${net.toFixed(2)}</td>
+                    <td style="text-align: right;">9.0%</td>
+                    <td style="text-align: center;">CGST</td>
+                    <td style="text-align: right;">₹${halfTax.toFixed(2)}</td>
+                    <td rowspan="2" style="text-align: right; font-weight: bold; vertical-align: middle;">₹${total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  </tr>
+                  <tr>
+                    <td style="color: #666; font-size: 9px; border-top: none; padding-top: 2px;">
+                      Shipping & material handling charges
+                    </td>
+                    <td style="text-align: right; border-top: none; padding-top: 2px;">9.0%</td>
+                    <td style="text-align: center; border-top: none; padding-top: 2px;">SGST</td>
+                    <td style="text-align: right; border-top: none; padding-top: 2px;">₹${halfTax.toFixed(2)}</td>
+                  </tr>
+                `;
+              }).join('')}
+              
               <tr class="total-row">
-                <td colspan="4" style="border: none;">Total Amount:</td>
-                <td class="total-val">₹${Number(order.totalPrice).toLocaleString()}</td>
+                <td colspan="7" style="text-align: right; border-right: none; font-weight: bold; font-size: 11px;">TOTAL:</td>
+                <td style="text-align: right; border-left: none; border-right: none; font-weight: bold; font-size: 11px;">
+                  ₹${(Number(order.totalPrice) * 0.18 / 1.18).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+                <td style="text-align: right; border-left: none; font-weight: bold; font-size: 12px; color: #111;">
+                  ₹${Number(order.totalPrice).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
               </tr>
             </tbody>
           </table>
-          <div class="footer">
-            Thank you for shopping with BuildMart! For any queries, contact support@buildmart.com
+
+          {/* Amount in words & Signature box */}
+          <div style="margin-top: 35px; display: flex; justify-content: space-between; align-items: flex-start;">
+            <div style="width: 55%; font-size: 11px; line-height: 1.6; text-align: left;">
+              <strong>Amount in Words:</strong><br/>
+              <span style="font-weight: 800; color: #222; font-size: 11.5px; text-transform: capitalize;">
+                ${numberToWords(Number(order.totalPrice))}
+              </span>
+              <div style="margin-top: 25px; font-size: 9px; color: #555;">
+                Whether tax is payable under reverse charge - No
+              </div>
+            </div>
+            
+            <div style="width: 40%; text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
+              <div style="font-weight: bold; font-size: 11px; margin-bottom: 5px; color: #333;">
+                For Aman Traders Store:
+              </div>
+              <div style="width: 170px; border: 1px dashed #bbb; padding: 12px 5px; text-align: center; font-size: 9.5px; color: #777; background: #fafafa; border-radius: 6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);">
+                <div style="font-family: 'Georgia', serif; font-size: 18px; font-weight: bold; color: #2b3947; font-style: italic; transform: rotate(-4deg); margin-bottom: 4px; letter-spacing: 0.5px; opacity: 0.85;">
+                  Aman Singh
+                </div>
+                Authorized Signatory
+              </div>
+            </div>
           </div>
+
+          <div style="margin-top: 50px; text-align: center; font-size: 10px; color: #777; border-top: 1px solid #eee; padding-top: 15px;">
+            This is a computer-generated tax invoice. No physical signature is required under Indian GST law.
+          </div>
+          
           <script>
             window.onload = function() { window.print(); }
           </script>
@@ -628,6 +842,7 @@ const Orders = () => {
       case "cancelled":
         return "Cancelled";
       case "delivery-pickup":
+      case "delivery_pickup":
         return "Out for Delivery";
       case "delivered":
         return "Delivered";
@@ -652,6 +867,7 @@ const Orders = () => {
       case "cancelled":
         return <XCircle className="h-3.5 w-3.5" />;
       case "delivery-pickup":
+      case "delivery_pickup":
         return <Truck className="h-3.5 w-3.5" />;
       case "delivered":
         return <CheckCircle className="h-3.5 w-3.5" />;
@@ -675,6 +891,7 @@ const Orders = () => {
       case "cancelled":
         return "bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100/50";
       case "delivery-pickup":
+      case "delivery_pickup":
         return "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100/50";
       case "delivered":
         return "bg-green-50 border-green-200 text-green-700 hover:bg-green-100/50";
@@ -703,11 +920,12 @@ const Orders = () => {
         item.item.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
-    const normalizedStatus = order.status.toLowerCase();
+    const normalizedStatus = order.status.toLowerCase().replace(/_/g, "-");
+    const normalizedFilter = statusFilter.toLowerCase().replace(/_/g, "-");
     const matchesStatus =
       statusFilter === "all" ||
-      normalizedStatus === statusFilter ||
-      normalizedStatus.startsWith(statusFilter);
+      normalizedStatus === normalizedFilter ||
+      normalizedStatus.startsWith(normalizedFilter);
 
     const matchesPayment =
       paymentFilter === "all" ||
@@ -804,7 +1022,7 @@ const Orders = () => {
                     <SelectItem value="accept">Accepted</SelectItem>
                     <SelectItem value="reject">Rejected</SelectItem>
                     <SelectItem value="cancel">Cancelled</SelectItem>
-                    <SelectItem value="delivery-pickup">Out for Delivery</SelectItem>
+                    <SelectItem value="delivery_pickup">Out for Delivery</SelectItem>
                     <SelectItem value="delivered">Delivered</SelectItem>
                   </SelectContent>
                 </Select>
@@ -870,7 +1088,9 @@ const Orders = () => {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
               <Table>
                 <TableHeader className="bg-slate-50/75 border-b border-slate-200">
                   <TableRow>
@@ -983,19 +1203,19 @@ const Orders = () => {
                                 {isUpdating === order.id ? "Rejecting..." : "Reject"}
                               </Button>
                             </>
-                          )}                          {!isFinalStatus(order.status) && ["ACCEPT", "ACCEPTED", "DELIVERY-PICKUP", "DELIVERED"].includes(order.status) && (
+                          )}                          {!isFinalStatus(order.status) && ["ACCEPT", "ACCEPTED", "DELIVERY-PICKUP", "DELIVERY_PICKUP", "DELIVERED"].includes(order.status.toUpperCase()) && (
                             <div className="flex flex-col gap-1.5">
                               <Select
-                                value={order.status.toLowerCase() === "accept" ? "accepted" : order.status.toLowerCase()}
+                                value={order.status.toLowerCase() === "accept" ? "accepted" : order.status.toLowerCase().replace(/-/g, "_")}
                                 onValueChange={(newStatus) => handleStatusUpdate(order.id, newStatus)}
-                                disabled={isUpdating === order.id}
+                                disabled={isUpdating === order.id || order.status.toUpperCase() === "DELIVERED"}
                               >
                                 <SelectTrigger className="w-36 h-9 border-slate-200 rounded-xl focus:ring-amber-400 text-xs font-bold text-slate-700">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="accepted">Accepted</SelectItem>
-                                  <SelectItem value="delivery-pickup">Out for Delivery</SelectItem>
+                                  <SelectItem value="delivery_pickup">Out for Delivery</SelectItem>
                                   <SelectItem value="delivered">Completed / Delivered</SelectItem>
                                   <SelectItem value="cancel">Cancel Order</SelectItem>
                                 </SelectContent>
@@ -1209,7 +1429,333 @@ const Orders = () => {
                 </TableBody>
               </Table>
             </div>
-          )}
+
+            {/* Mobile Card List View */}
+            <div className="block md:hidden divide-y divide-slate-100">
+              {currentOrders.map((order) => (
+                <div key={order.id} className="p-4 space-y-4">
+                  {/* Header: ID, Badge, Date */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-extrabold text-slate-800 text-sm">
+                        #{order.id.length > 8 ? `${order.id.slice(0, 8)}...` : order.id}
+                      </p>
+                      <p className="text-[10px] font-semibold text-slate-400 mt-0.5">
+                        {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric"
+                        })}
+                      </p>
+                    </div>
+                    <Badge className={`${getStatusColor(order.status)} flex items-center gap-1.5 w-fit border font-bold text-[10px] px-2.5 py-0.5 rounded-full shadow-sm`}>
+                      {getStatusIcon(order.status)}
+                      {getStatusDisplayText(order.status)}
+                    </Badge>
+                  </div>
+
+                  {/* Buyer details */}
+                  <div className="space-y-1 bg-slate-50/50 p-3 rounded-xl border border-slate-100 text-left">
+                    <p className="font-bold text-slate-800 text-xs flex items-center justify-between">
+                      <span>👤 {order.customer?.user?.name || "GharSeKro Customer"}</span>
+                      {(() => {
+                        const addressQuery = order.deliveryAddress.latitude && order.deliveryAddress.longitude
+                          ? `${order.deliveryAddress.latitude},${order.deliveryAddress.longitude}`
+                          : `${order.deliveryAddress.flatnumber}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`;
+                        return (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-amber-500 hover:text-amber-600 inline-flex items-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MapPin className="h-4 w-4" />
+                          </a>
+                        );
+                      })()}
+                    </p>
+                    <p className="text-[11px] text-slate-500 leading-normal">
+                      {order.deliveryAddress.flatnumber}, {order.deliveryAddress.city}, {order.deliveryAddress.state} - {order.deliveryAddress.pincode}
+                    </p>
+                    {order.deliveryGuy && (
+                      <p className="text-[10px] font-extrabold uppercase text-amber-650 mt-1.5 flex items-center gap-1">
+                        <span>🏍️ Rider:</span>
+                        <span className="bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200">
+                          {order.deliveryGuy.user?.name || "Assigned"}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Order items summary & price */}
+                  <div className="flex items-center justify-between gap-4 text-left">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-600">
+                        {order.orderItems.length} Product{order.orderItems.length > 1 ? "s" : ""}
+                      </p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                        {order.paymentType}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-black text-amber-600">
+                        ₹{Number(order.totalPrice || 0).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Actions / Buttons & Invoice Dialog */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-50">
+                    
+                    {/* Status update logic / Accept Reject */}
+                    <div className="flex items-center gap-2">
+                      {(order.status === "PENDING" || order.status === "PROCESSING") && (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={() => handleAcceptOrder(order.id)}
+                            disabled={isUpdating === order.id}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm rounded-lg text-[10px] h-8 px-2.5"
+                          >
+                            <Check className="h-3 w-3 mr-1" />
+                            {isUpdating === order.id ? "..." : "Accept"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleRejectOrder(order.id)}
+                            disabled={isUpdating === order.id}
+                            className="bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-sm rounded-lg text-[10px] h-8 px-2.5"
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            {isUpdating === order.id ? "..." : "Reject"}
+                          </Button>
+                        </>
+                      )}
+
+                      {!isFinalStatus(order.status) && ["ACCEPT", "ACCEPTED", "DELIVERY-PICKUP", "DELIVERY_PICKUP", "DELIVERED"].includes(order.status.toUpperCase()) && (
+                        <div className="flex flex-col gap-1.5">
+                          <Select
+                            value={order.status.toLowerCase() === "accept" ? "accepted" : order.status.toLowerCase().replace(/-/g, "_")}
+                            onValueChange={(newStatus) => handleStatusUpdate(order.id, newStatus)}
+                            disabled={isUpdating === order.id || order.status.toUpperCase() === "DELIVERED"}
+                          >
+                            <SelectTrigger className="w-32 h-8 border-slate-200 rounded-lg focus:ring-amber-400 text-[10px] font-bold text-slate-700">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="accepted">Accepted</SelectItem>
+                              <SelectItem value="delivery_pickup">Out for Delivery</SelectItem>
+                              <SelectItem value="delivered">Completed / Delivered</SelectItem>
+                              <SelectItem value="cancel">Cancel Order</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          {/* Rider Assignment Dropdown */}
+                          {["ACCEPT", "ACCEPTED"].includes(order.status) && (
+                            <Select
+                              value={order.deliveryGuyId || "unassigned"}
+                              onValueChange={async (riderId) => {
+                                if (riderId === "unassigned") return;
+                                try {
+                                  setIsUpdating(order.id);
+                                  await orderService.assignOrder(order.id, riderId);
+                                  setOrders(prev => prev.map(o => o.id === order.id ? { ...o, deliveryGuyId: riderId } : o));
+                                  toast({
+                                    title: "Rider Assigned",
+                                    description: "Rider successfully assigned to order",
+                                  });
+                                  fetchOrders();
+                                } catch (err) {
+                                  toast({
+                                    title: "Assignment Failed",
+                                    description: err instanceof Error ? err.message : "Failed to assign rider",
+                                    variant: "destructive"
+                                  });
+                                } finally {
+                                  setIsUpdating(null);
+                                }
+                              }}
+                              disabled={isUpdating === order.id}
+                            >
+                              <SelectTrigger className="w-32 h-8 border-slate-200 rounded-lg focus:ring-amber-400 text-[10px] font-bold text-slate-700 bg-amber-50/50">
+                                <SelectValue placeholder="Assign Rider..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="unassigned">Unassigned</SelectItem>
+                                {riders.map((r) => (
+                                  <SelectItem key={r.id} value={r.id}>
+                                    {r.user.name} ({r.status === "AVAILABLE" ? "Idle" : r.status})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                      )}
+
+                      {isFinalStatus(order.status) && (
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Locked</span>
+                      )}
+                    </div>
+
+                    {/* Invoice controls */}
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Print Invoice"
+                        onClick={() => printInvoice(order)}
+                        className="hover:bg-amber-50 hover:text-amber-600 rounded-lg h-8 w-8"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-printer"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+                      </Button>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="hover:bg-amber-50 hover:text-amber-600 rounded-lg h-8 w-8">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl p-0 max-h-[90vh] overflow-y-auto">
+                          
+                          {/* Indian flag strip */}
+                          <div className="h-1.5 bg-gradient-to-r from-orange-500 via-white to-green-500" />
+                          
+                          <div className="p-4 md:p-8 space-y-6">
+                            <DialogHeader className="flex flex-row items-center justify-between pr-6">
+                              <DialogTitle className="text-lg font-black text-slate-800">
+                                Order Invoice details
+                              </DialogTitle>
+                              <Button
+                                onClick={() => printInvoice(order)}
+                                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs gap-1.5 h-8 px-3 rounded-lg shadow-sm"
+                              >
+                                Download Invoice
+                              </Button>
+                            </DialogHeader>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 border border-slate-100 p-4 rounded-2xl text-xs md:text-sm leading-relaxed text-slate-600">
+                            <div>
+                              <h4 className="font-extrabold text-slate-800 uppercase tracking-widest text-[10px] md:text-xs mb-3">Invoice Details</h4>
+                              <p><strong>Order ID:</strong> #{order.id}</p>
+                              <p><strong>Customer ID:</strong> {order.customerId}</p>
+                              <p><strong>Payment Mode:</strong> {order.paymentType}</p>
+                              <p><strong>Created:</strong> {new Date(order.createdAt).toLocaleString("en-IN")}</p>
+                              <p className="mt-2 flex items-center">
+                                <strong>Status:</strong>
+                                <Badge className={`ml-2 text-[9px] md:text-[10px] font-bold ${getStatusColor(order.status)}`}>
+                                  {getStatusDisplayText(order.status)}
+                                </Badge>
+                              </p>
+
+                              <EstimatedDeliveryPicker
+                                orderId={order.id}
+                                currentValue={order.estimatedDelivery || ""}
+                                onUpdate={async (orderId, val) => {
+                                  try {
+                                    await orderService.updateDeliveryTime(orderId, val);
+                                    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, estimatedDelivery: val } : o));
+                                    toast({
+                                      title: "Delivery Time Updated",
+                                      description: `Estimation set to "${val}"`,
+                                    });
+                                  } catch (err) {
+                                    toast({
+                                      title: "Error updating",
+                                      description: "Failed to update delivery time",
+                                      variant: "destructive"
+                                    });
+                                  }
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <h4 className="font-extrabold text-slate-800 uppercase tracking-widest text-[10px] md:text-xs mb-3">Delivery Address</h4>
+                              <p><strong>Flat/House:</strong> {order.deliveryAddress.flatnumber}</p>
+                              <p><strong>City:</strong> {order.deliveryAddress.city}</p>
+                              <p><strong>State:</strong> {order.deliveryAddress.state}</p>
+                              <p><strong>Pincode:</strong> {order.deliveryAddress.pincode}</p>
+                              {(() => {
+                                const addressQuery = order.deliveryAddress.latitude && order.deliveryAddress.longitude
+                                  ? `${order.deliveryAddress.latitude},${order.deliveryAddress.longitude}`
+                                  : `${order.deliveryAddress.flatnumber}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`;
+                                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`;
+                                return (
+                                  <div className="mt-3 space-y-2">
+                                    <div className="w-full h-36 rounded-xl overflow-hidden border border-slate-200">
+                                      <iframe
+                                        title="Delivery Location Map"
+                                        width="100%"
+                                        height="100%"
+                                        style={{ border: 0 }}
+                                        src={`https://maps.google.com/maps?q=${encodeURIComponent(addressQuery)}&z=15&output=embed`}
+                                        allowFullScreen
+                                        loading="lazy"
+                                      ></iframe>
+                                    </div>
+                                    <a
+                                      href={mapsUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1.5 text-[10px] font-black text-amber-650 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-xl transition-all shadow-sm w-full justify-center"
+                                    >
+                                      <MapPin className="h-3 w-3" />
+                                      Open in Google Maps
+                                    </a>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          </div>
+
+                          {/* Items Table */}
+                          <div className="space-y-2">
+                            <h4 className="font-extrabold text-slate-800 uppercase tracking-widest text-[10px] md:text-xs">Ordered Products</h4>
+                            <div className="border border-slate-100 rounded-xl overflow-hidden overflow-x-auto">
+                              <Table>
+                                <TableHeader className="bg-slate-50">
+                                  <TableRow>
+                                    <TableHead className="font-bold text-slate-600 text-[10px] md:text-xs">Item Name</TableHead>
+                                    <TableHead className="font-bold text-slate-600 text-[10px] md:text-xs">Qty</TableHead>
+                                    <TableHead className="font-bold text-slate-600 text-[10px] md:text-xs">Unit</TableHead>
+                                    <TableHead className="font-bold text-slate-600 text-[10px] md:text-xs">Variant</TableHead>
+                                    <TableHead className="font-bold text-slate-600 text-[10px] md:text-xs">Rate</TableHead>
+                                    <TableHead className="font-bold text-slate-600 text-[10px] md:text-xs text-right">Total</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {order.orderItems.map((item) => (
+                                    <TableRow key={item.id}>
+                                      <TableCell className="font-bold text-slate-800 text-[10px] md:text-xs">{item.item.title}</TableCell>
+                                      <TableCell className="font-semibold text-slate-700 text-[10px] md:text-xs">{item.quantity}</TableCell>
+                                      <TableCell className="text-slate-500 text-[10px] md:text-xs">{item.item.unit}</TableCell>
+                                      <TableCell className="text-slate-500 text-[10px] md:text-xs">{item.variants?.size || "-"}</TableCell>
+                                      <TableCell className="font-bold text-slate-750 text-[10px] md:text-xs">₹{parseFloat(item.unitPrice).toLocaleString()}</TableCell>
+                                      <TableCell className="font-extrabold text-slate-800 text-[10px] md:text-xs text-right">₹{parseFloat(item.lineTotal).toLocaleString()}</TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          </div>
+
+                          <div className="pt-4 border-t flex justify-between items-center">
+                            <span className="text-slate-500 text-[10px] md:text-xs font-bold uppercase">Estimated Bill</span>
+                            <span className="text-xl md:text-2xl font-black text-amber-600">
+                              ₹{Number(order.totalPrice || 0).toLocaleString()}
+                            </span>
+                          </div>
+
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>)}
 
           {/* ── Premium Pagination Navigation Controls Bar ── */}
           {!isLoading && totalPages > 1 && (

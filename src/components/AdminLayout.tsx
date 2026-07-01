@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Bell, Search, ShoppingCart, Layers, Package } from "lucide-react";
+import { LogOut, User, Bell, Search, ShoppingCart, Layers, Package, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { dashboardService } from "@/lib/api";
 
@@ -23,6 +23,7 @@ const AdminLayout = () => {
   } | null>(null);
 
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     // Fetch dynamic database notification updates (orders, low stock items)
@@ -204,19 +205,62 @@ const AdminLayout = () => {
   }
 
   return (
-    <div className="h-full w-full flex overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
-      <AdminSidebar />
+    <div className="h-full w-full flex overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 relative">
+      {/* Sidebar for Desktop */}
+      <AdminSidebar className="hidden md:flex" />
+
+      {/* Mobile Drawer Navigation overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex md:hidden bg-slate-900/60 backdrop-blur-xs"
+          onClick={() => setIsMobileMenuOpen(false)}
+        >
+          <div 
+            className="w-64 h-full bg-[#1e293b] flex flex-col animate-slide-in-right relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header / Brand inside mobile menu */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
+              <span className="text-[#febd69] font-black text-sm tracking-wide uppercase">Aman Traders</span>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setIsMobileMenuOpen(false)} 
+                className="text-white hover:bg-slate-800 rounded-lg h-8 w-8"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto">
+              <AdminSidebar forceExpanded={true} onNavigate={() => setIsMobileMenuOpen(false)} className="w-full border-r-0 shadow-none h-full" />
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
         {/* Top Header */}
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-8 flex-shrink-0 z-40">
-          <div className="flex flex-col">
-            <h1 className="text-2xl font-bold text-slate-900">
-              {getPageTitle()}
-            </h1>
-            <p className="text-sm text-slate-600 mt-0.5">
-              {getPageDescription()}
-            </p>
+        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-4 sm:px-8 flex-shrink-0 z-40">
+          <div className="flex items-center">
+            {/* Mobile Hamburger menu toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="md:hidden mr-3 h-10 w-10 hover:bg-slate-100 rounded-xl"
+            >
+              <Menu className="h-5 w-5 text-slate-700" />
+            </Button>
+
+            <div className="flex flex-col">
+              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 leading-tight">
+                {getPageTitle()}
+              </h1>
+              <p className="text-[11px] sm:text-sm text-slate-600 mt-0.5 truncate max-w-[150px] sm:max-w-none">
+                {getPageDescription()}
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
@@ -262,11 +306,11 @@ const AdminLayout = () => {
                       const Icon = getNotificationIcon(notif.type);
                       const iconBg = getNotificationIconBg(notif.type);
                       return (
-                        <div 
+                        <DropdownMenuItem 
                           key={notif.id}
                           onClick={() => handleNotificationClick(notif)}
                           className={cn(
-                            "flex gap-3 p-4 hover:bg-slate-50 transition-colors cursor-pointer text-left relative",
+                            "flex gap-3 p-4 hover:bg-slate-50 transition-colors cursor-pointer text-left relative focus:bg-slate-50 focus:text-slate-900 border-b border-slate-100 last:border-b-0",
                             !notif.seen && "bg-blue-50/20 font-medium"
                           )}
                         >
@@ -285,7 +329,7 @@ const AdminLayout = () => {
                           {!notif.seen && (
                             <div className="absolute top-1/2 right-2 transform -translate-y-1/2 w-2 h-2 bg-amber-500 rounded-full shrink-0 animate-pulse" />
                           )}
-                        </div>
+                        </DropdownMenuItem>
                       );
                     })
                   )}

@@ -90,7 +90,13 @@ const menuItems = [
   },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  onNavigate?: () => void;
+  className?: string;
+  forceExpanded?: boolean;
+}
+
+export function AdminSidebar({ onNavigate, className, forceExpanded = false }: AdminSidebarProps) {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>(["Inventory"]);
@@ -107,23 +113,28 @@ export function AdminSidebar() {
 
   const isGroupExpanded = (title: string) => expandedGroups.includes(title);
 
+  const isCollapsed = forceExpanded ? false : collapsed;
+
   return (
     <div className={cn(
       "relative flex-shrink-0 bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out shadow-lg text-sidebar-foreground flex flex-col",
-      collapsed ? "w-16" : "w-64"
+      isCollapsed ? "w-16" : "w-64",
+      className
     )}>
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(100,116,139,0.05)_1px,transparent_0)] bg-[length:20px_20px]" />
 
       {/* Toggle Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-6 z-10 h-6 w-6 rounded-full bg-sidebar-accent border border-sidebar-border hover:bg-sidebar-accent/80 text-sidebar-foreground shadow-lg"
-      >
-        {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
-      </Button>
+      {!forceExpanded && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute -right-3 top-6 z-10 h-6 w-6 rounded-full bg-sidebar-accent border border-sidebar-border hover:bg-sidebar-accent/80 text-sidebar-foreground shadow-lg"
+        >
+          {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+        </Button>
+      )}
 
       <div className="relative z-10 flex flex-col h-full">
         {/* Logo/Brand */}
@@ -132,7 +143,7 @@ export function AdminSidebar() {
             <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden shrink-0 shadow-sm border bg-white p-1">
               <img src="/logo.png" alt="GharSeKro logo" className="w-full h-full object-contain" />
             </div>
-            {!collapsed && (
+            {!isCollapsed && (
               <div className="flex flex-col">
                 <h2 className="font-extrabold text-white text-base leading-tight tracking-tight">GharSeKro</h2>
                 <span className="text-[10px] text-[#febd69] font-black uppercase tracking-wider">Admin Portal</span>
@@ -149,7 +160,7 @@ export function AdminSidebar() {
               return (
                 <div key={item.title} className="space-y-1">
                   <button
-                    onClick={() => !collapsed && toggleGroup(item.title)}
+                    onClick={() => !isCollapsed && toggleGroup(item.title)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group border border-transparent",
                       "hover:bg-sidebar-accent/60 text-sidebar-foreground hover:text-[#febd69]"
@@ -161,7 +172,7 @@ export function AdminSidebar() {
                     )}>
                       <item.icon className="h-4 w-4 text-white" />
                     </div>
-                    {!collapsed && (
+                    {!isCollapsed && (
                       <>
                         <span className="font-medium flex-1 text-left">{item.title}</span>
                         <ChevronRight className={cn(
@@ -172,12 +183,13 @@ export function AdminSidebar() {
                     )}
                   </button>
 
-                  {!collapsed && isGroupExpanded(item.title) && (
+                  {!isCollapsed && isGroupExpanded(item.title) && (
                     <div className="ml-4 space-y-1 border-l border-sidebar-border pl-4">
                       {item.items.map((subItem) => (
                         <NavLink
                           key={subItem.title}
                           to={subItem.url}
+                          onClick={onNavigate}
                           className={cn(
                             "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group border border-transparent",
                             isActive(subItem.url)
@@ -208,6 +220,7 @@ export function AdminSidebar() {
                 <NavLink
                   key={item.title}
                   to={item.url}
+                  onClick={onNavigate}
                   className={cn(
                     "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group border border-transparent",
                     isActive(item.url)
@@ -222,7 +235,7 @@ export function AdminSidebar() {
                   )}>
                     <item.icon className="h-4 w-4 text-white" />
                   </div>
-                  {!collapsed && (
+                  {!isCollapsed && (
                     <>
                       <span className="font-medium">{item.title}</span>
                       {isActive(item.url) && (
@@ -237,7 +250,7 @@ export function AdminSidebar() {
         </div>
 
         {/* Footer */}
-        {!collapsed && (
+        {!isCollapsed && (
           <div className="p-4 border-t border-sidebar-border">
             <div className="bg-sidebar-accent/60 border border-sidebar-border rounded-xl p-3">
               <div className="flex items-center gap-2 text-[#febd69] mb-1">
