@@ -666,15 +666,15 @@ const Orders = () => {
               <td style="width: 50%; border: none; vertical-align: top; padding: 0 15px 0 0; line-height: 1.5;">
                 <div style="font-weight: bold; font-size: 11px; margin-bottom: 5px; color: #444; text-transform: uppercase;">Sold By :</div>
                 <div style="font-size: 11px;">
-                  <strong>Aman Traders Store</strong><br/>
-                  75, 3rd Cross, Lalbagh Road<br/>
+                  <strong>Aman Traders</strong><br/>
+                  Sictour, Near Vastu Bihar Phase 1<br/>
                   GORAKHPUR, UTTAR PRADESH, 273010<br/>
                   IN<br/>
                   <strong>Mobile No:</strong> +91 89570 35082
                 </div>
                 <div style="margin-top: 10px; font-size: 10.5px; line-height: 1.4;">
-                  <strong>PAN No:</strong> AACFV3325K<br/>
-                  <strong>GST Registration No:</strong> 29AACFV3325K1ZY
+                  <strong>PAN No:</strong> OHNPS6602G<br/>
+                  <strong>GST Registration No:</strong> 09OHNPS6602G1ZM
                 </div>
               </td>
               <td style="width: 50%; border: none; vertical-align: top; padding: 0 0 0 15px; line-height: 1.5;">
@@ -808,7 +808,7 @@ const Orders = () => {
             
             <div style="width: 40%; text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
               <div style="font-weight: bold; font-size: 11px; margin-bottom: 5px; color: #333;">
-                For Aman Traders Store:
+                For Aman Traders:
               </div>
               <div style="width: 170px; border: 1px dashed #bbb; padding: 12px 5px; text-align: center; font-size: 9.5px; color: #777; background: #fafafa; border-radius: 6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);">
                 <div style="font-family: 'Georgia', serif; font-size: 18px; font-weight: bold; color: #2b3947; font-style: italic; transform: rotate(-4deg); margin-bottom: 4px; letter-spacing: 0.5px; opacity: 0.85;">
