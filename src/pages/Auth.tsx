@@ -27,50 +27,57 @@ const Auth = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for query parameters if we are on /oauth/callback or if token is in URL
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    const success = params.get("success");
-    const name = params.get("name");
-    const emailParam = params.get("email");
+    const existingToken = localStorage.getItem("authToken");
+    if (existingToken) navigate("/dashboard");
+  }, [navigate]);
 
-    if (token) {
-      console.log("OAuth Callback: Found token in URL parameters, success status:", success);
-      if (success === "yes") {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/owner/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Login failed. Please check your credentials.");
+      }
+
+      const { token, isSetupComplete, user } = data;
+
+      if (isSetupComplete) {
         localStorage.setItem("authToken", token);
-        if (name) localStorage.setItem("userName", name);
-        if (emailParam) localStorage.setItem("userEmail", emailParam);
+        if (user?.name) localStorage.setItem("userName", user.name);
+        if (user?.email) localStorage.setItem("userEmail", user.email);
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${name || "Admin"}!`,
+          description: `Welcome back, ${user?.name || "Admin"}!`,
         });
         navigate("/dashboard");
       } else {
-        // success === "no" or setup not complete
         localStorage.setItem("authToken", token);
         localStorage.setItem("tempAuthToken", token);
-        if (name) localStorage.setItem("tempUserName", name);
-        if (emailParam) localStorage.setItem("tempUserEmail", emailParam);
+        if (user?.name) localStorage.setItem("tempUserName", user.name);
+        if (user?.email) localStorage.setItem("tempUserEmail", user.email);
         toast({
           title: "Authentication Successful",
           description: "Please complete your shop setup details.",
         });
         navigate("/setup");
       }
-    } else {
-      const existingToken = localStorage.getItem("authToken");
-      if (existingToken) navigate("/dashboard");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
-  }, [navigate, toast]);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    // Redirect directly to the Node/Express backend's Developer Bypass URL
-    console.log("Auth: Redirecting to backend developer bypass login...");
-    window.location.href = `${API_BASE_URL}/owner/auth/google?bypass=true`;
   };
 
   return (
