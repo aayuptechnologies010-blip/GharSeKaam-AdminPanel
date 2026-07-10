@@ -8,12 +8,6 @@ import { Loader2, AlertCircle, Package, ShoppingCart, BarChart3, Eye, EyeOff, Lo
 import { useToast } from "@/hooks/use-toast";
 import adminHero from "@/assets/admin-hero.jpg";
 
-// Demo admin credentials - change these as needed
-const ADMIN_CREDENTIALS = [
-  { email: "admin@gharsekro.com", password: "admin123", name: "Admin User" },
-  { email: "owner@gharsekro.com", password: "owner123", name: "Store Owner" },
-];
-
 import { API_BASE_URL } from "@/lib/constants";
 
 const Auth = () => {
@@ -37,7 +31,7 @@ const Auth = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/owner/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/owner/admin/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
