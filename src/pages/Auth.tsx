@@ -31,7 +31,7 @@ const Auth = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/owner/admin/login`, {
+      const response = await fetch(`${API_BASE_URL}/owner/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
