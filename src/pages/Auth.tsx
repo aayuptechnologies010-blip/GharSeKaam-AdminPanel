@@ -31,7 +31,7 @@ const Auth = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/owner/admin/login`, {
+      const response = await fetch(`${API_BASE_URL}/owner/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -45,18 +45,28 @@ const Auth = () => {
         throw new Error(data.message || "Login failed. Please check your credentials.");
       }
 
-      const { token, admin } = data;
+      const { token, isSetupComplete, user } = data;
 
-      localStorage.setItem("authToken", token);
-      if (admin?.name) localStorage.setItem("userName", admin.name);
-      if (admin?.email) localStorage.setItem("userEmail", admin.email);
-      
-      toast({
-        title: "Login Successful",
-        description: `Welcome back, ${admin?.name || "Admin"}!`,
-      });
-      
-      navigate("/dashboard");
+      if (isSetupComplete) {
+        localStorage.setItem("authToken", token);
+        if (user?.name) localStorage.setItem("userName", user.name);
+        if (user?.email) localStorage.setItem("userEmail", user.email);
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${user?.name || "Admin"}!`,
+        });
+        navigate("/dashboard");
+      } else {
+        localStorage.setItem("authToken", token);
+        localStorage.setItem("tempAuthToken", token);
+        if (user?.name) localStorage.setItem("tempUserName", user.name);
+        if (user?.email) localStorage.setItem("tempUserEmail", user.email);
+        toast({
+          title: "Authentication Successful",
+          description: "Please complete your shop setup details.",
+        });
+        navigate("/setup");
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
