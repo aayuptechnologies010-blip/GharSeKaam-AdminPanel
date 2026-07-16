@@ -1445,7 +1445,10 @@ const Orders = () => {
                                   <h4 className="font-extrabold text-slate-800 uppercase tracking-widest text-xs mb-3">Delivery Address</h4>
                                   <p><strong>Name:</strong> {getBuyerName(order)}</p>
                                   <p><strong>Mobile:</strong> {order.customer?.user?.phone || "N/A"}</p>
-                                  <p><strong>Flat/House:</strong> {order.deliveryAddress.flatnumber}</p>
+                                  <p><strong>Flat/House:</strong> {order.deliveryAddress.flatnumber}{order.deliveryAddress.building ? `, ${order.deliveryAddress.building}` : ""}</p>
+                                  {order.deliveryAddress.street && <p><strong>Street:</strong> {order.deliveryAddress.street}</p>}
+                                  {order.deliveryAddress.area && <p><strong>Area:</strong> {order.deliveryAddress.area}</p>}
+                                  {order.deliveryAddress.landmark && <p><strong>Landmark:</strong> {order.deliveryAddress.landmark}</p>}
                                   <p><strong>City:</strong> {order.deliveryAddress.city}</p>
                                   <p><strong>State:</strong> {order.deliveryAddress.state}</p>
                                   <p><strong>Pincode:</strong> {order.deliveryAddress.pincode}</p>
@@ -1775,7 +1778,10 @@ const Orders = () => {
                               <h4 className="font-extrabold text-slate-800 uppercase tracking-widest text-[10px] md:text-xs mb-3">Delivery Address</h4>
                               <p><strong>Name:</strong> {getBuyerName(order)}</p>
                               <p><strong>Mobile:</strong> {order.customer?.user?.phone || "N/A"}</p>
-                              <p><strong>Flat/House:</strong> {order.deliveryAddress.flatnumber}</p>
+                              <p><strong>Flat/House:</strong> {order.deliveryAddress.flatnumber}{order.deliveryAddress.building ? `, ${order.deliveryAddress.building}` : ""}</p>
+                              {order.deliveryAddress.street && <p><strong>Street:</strong> {order.deliveryAddress.street}</p>}
+                              {order.deliveryAddress.area && <p><strong>Area:</strong> {order.deliveryAddress.area}</p>}
+                              {order.deliveryAddress.landmark && <p><strong>Landmark:</strong> {order.deliveryAddress.landmark}</p>}
                               <p><strong>City:</strong> {order.deliveryAddress.city}</p>
                               <p><strong>State:</strong> {order.deliveryAddress.state}</p>
                               <p><strong>Pincode:</strong> {order.deliveryAddress.pincode}</p>
