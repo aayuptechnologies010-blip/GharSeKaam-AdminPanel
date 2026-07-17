@@ -750,48 +750,61 @@ const Orders = () => {
               </tr>
             </thead>
             <tbody>
-              ${order.orderItems.map((item, idx) => {
-                const total = parseFloat(item.lineTotal);
-                const net = total / 1.18;
-                const tax = total - net;
-                const halfTax = tax / 2;
-                const unitNetPrice = parseFloat(item.unitPrice) / 1.18;
+              ${(() => {
+                const subTotalAmount = Number(order.totalPrice) || 0;
+                const shippingCharge = subTotalAmount > 999 ? 0 : 49;
+                const grandTotalAmount = subTotalAmount + shippingCharge;
+                const totalTaxAmount = subTotalAmount * 0.18 / 1.18;
                 
-                return `
+                let htmlStr = order.orderItems.map((item, idx) => {
+                  const total = parseFloat(item.lineTotal);
+                  const net = total / 1.18;
+                  const tax = total - net;
+                  const halfTax = tax / 2;
+                  const unitNetPrice = parseFloat(item.unitPrice) / 1.18;
+                  
+                  return `
+                    <tr>
+                      <td style="text-align: center; vertical-align: middle;">${idx + 1}</td>
+                      <td style="font-weight: bold; font-size: 10.5px;">
+                        ${item.item.title} ${item.variants?.size ? `(Size: ${item.variants.size})` : ""}
+                      </td>
+                      <td style="text-align: right; vertical-align: middle;">₹${unitNetPrice.toFixed(2)}</td>
+                      <td style="text-align: center; vertical-align: middle;">${item.quantity}</td>
+                      <td style="text-align: right; vertical-align: middle;">₹${net.toFixed(2)}</td>
+                      <td style="text-align: right;">9.0%</td>
+                      <td style="text-align: center;">CGST<br/>SGST</td>
+                      <td style="text-align: right;">₹${halfTax.toFixed(2)}<br/>₹${halfTax.toFixed(2)}</td>
+                      <td style="text-align: right; font-weight: bold; vertical-align: middle;">₹${total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  `;
+                }).join('');
+                
+                htmlStr += `
                   <tr>
-                    <td style="text-align: center; vertical-align: middle;">${idx + 1}</td>
-                    <td style="font-weight: bold; font-size: 10.5px;">
-                      ${item.item.title} ${item.variants?.size ? `(Size: ${item.variants.size})` : ""}
+                    <td></td>
+                    <td style="text-align: left; font-weight: bold; font-size: 10px;">Shipping & material handling charges</td>
+                    <td style="text-align: right;">₹${shippingCharge.toFixed(2)}</td>
+                    <td style="text-align: center;">1</td>
+                    <td style="text-align: right;">₹${shippingCharge.toFixed(2)}</td>
+                    <td style="text-align: right;">-</td>
+                    <td style="text-align: center;">-</td>
+                    <td style="text-align: right;">₹0.00</td>
+                    <td style="text-align: right; font-weight: bold;">₹${shippingCharge.toFixed(2)}</td>
+                  </tr>
+                  
+                  <tr class="total-row">
+                    <td colspan="7" style="text-align: right; border-right: none; font-weight: bold; font-size: 11px;">TOTAL (Subtotal + Shipping):</td>
+                    <td style="text-align: right; border-left: none; border-right: none; font-weight: bold; font-size: 11px;">
+                      ₹${totalTaxAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td style="text-align: right; vertical-align: middle;">₹${unitNetPrice.toFixed(2)}</td>
-                    <td style="text-align: center; vertical-align: middle;">${item.quantity}</td>
-                    <td style="text-align: right; vertical-align: middle;">₹${net.toFixed(2)}</td>
-                    <td style="text-align: right;">9.0%</td>
-                    <td style="text-align: center;">CGST<br/>SGST</td>
-                    <td style="text-align: right;">₹${halfTax.toFixed(2)}<br/>₹${halfTax.toFixed(2)}</td>
-                    <td style="text-align: right; font-weight: bold; vertical-align: middle;">₹${total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style="text-align: right; border-left: none; font-weight: bold; font-size: 12px; color: #111;">
+                      ₹${grandTotalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
                   </tr>
                 `;
-              }).join('')}
-              
-              <tr>
-                <td colspan="4" style="text-align: right; font-weight: bold; font-size: 10px;">Shipping & material handling charges</td>
-                <td style="text-align: right;">₹${(Number(order.totalPrice) > 999 ? 0 : 49).toFixed(2)}</td>
-                <td style="text-align: right;">-</td>
-                <td style="text-align: center;">-</td>
-                <td style="text-align: right;">₹0.00</td>
-                <td style="text-align: right; font-weight: bold;">₹${(Number(order.totalPrice) > 999 ? 0 : 49).toFixed(2)}</td>
-              </tr>
-              
-              <tr class="total-row">
-                <td colspan="7" style="text-align: right; border-right: none; font-weight: bold; font-size: 11px;">TOTAL:</td>
-                <td style="text-align: right; border-left: none; border-right: none; font-weight: bold; font-size: 11px;">
-                  ₹${(Number(order.totalPrice) * 0.18 / 1.18).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </td>
-                <td style="text-align: right; border-left: none; font-weight: bold; font-size: 12px; color: #111;">
-                  ₹${(Number(order.totalPrice) + (Number(order.totalPrice) > 999 ? 0 : 49)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </td>
-              </tr>
+                return htmlStr;
+              })()}
             </tbody>
           </table>
 

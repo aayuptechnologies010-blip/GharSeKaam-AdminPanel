@@ -221,7 +221,7 @@ const AdminLayout = () => {
           >
             {/* Header / Brand inside mobile menu */}
             <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
-              <span className="text-[#febd69] font-black text-sm tracking-wide uppercase">Aman Traders</span>
+              <span className="text-[#febd69] font-black text-sm tracking-wide uppercase">GharSeKro</span>
               <Button 
                 variant="ghost" 
                 size="icon" 
