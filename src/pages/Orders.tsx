@@ -759,28 +759,29 @@ const Orders = () => {
                 
                 return `
                   <tr>
-                    <td rowspan="2" style="text-align: center; vertical-align: top;">${idx + 1}</td>
+                    <td style="text-align: center; vertical-align: middle;">${idx + 1}</td>
                     <td style="font-weight: bold; font-size: 10.5px;">
                       ${item.item.title} ${item.variants?.size ? `(Size: ${item.variants.size})` : ""}
                     </td>
-                    <td rowspan="2" style="text-align: right; vertical-align: top;">₹${unitNetPrice.toFixed(2)}</td>
-                    <td rowspan="2" style="text-align: center; vertical-align: top;">${item.quantity}</td>
-                    <td rowspan="2" style="text-align: right; vertical-align: top;">₹${net.toFixed(2)}</td>
+                    <td style="text-align: right; vertical-align: middle;">₹${unitNetPrice.toFixed(2)}</td>
+                    <td style="text-align: center; vertical-align: middle;">${item.quantity}</td>
+                    <td style="text-align: right; vertical-align: middle;">₹${net.toFixed(2)}</td>
                     <td style="text-align: right;">9.0%</td>
-                    <td style="text-align: center;">CGST</td>
-                    <td style="text-align: right;">₹${halfTax.toFixed(2)}</td>
-                    <td rowspan="2" style="text-align: right; font-weight: bold; vertical-align: middle;">₹${total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  </tr>
-                  <tr>
-                    <td style="color: #666; font-size: 9px; border-top: none; padding-top: 2px;">
-                      Shipping & material handling charges
-                    </td>
-                    <td style="text-align: right; border-top: none; padding-top: 2px;">9.0%</td>
-                    <td style="text-align: center; border-top: none; padding-top: 2px;">SGST</td>
-                    <td style="text-align: right; border-top: none; padding-top: 2px;">₹${halfTax.toFixed(2)}</td>
+                    <td style="text-align: center;">CGST<br/>SGST</td>
+                    <td style="text-align: right;">₹${halfTax.toFixed(2)}<br/>₹${halfTax.toFixed(2)}</td>
+                    <td style="text-align: right; font-weight: bold; vertical-align: middle;">₹${total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 `;
               }).join('')}
+              
+              <tr>
+                <td colspan="4" style="text-align: right; font-weight: bold; font-size: 10px;">Shipping & material handling charges</td>
+                <td style="text-align: right;">₹${(Number(order.totalPrice) > 999 ? 0 : 49).toFixed(2)}</td>
+                <td style="text-align: right;">-</td>
+                <td style="text-align: center;">-</td>
+                <td style="text-align: right;">₹0.00</td>
+                <td style="text-align: right; font-weight: bold;">₹${(Number(order.totalPrice) > 999 ? 0 : 49).toFixed(2)}</td>
+              </tr>
               
               <tr class="total-row">
                 <td colspan="7" style="text-align: right; border-right: none; font-weight: bold; font-size: 11px;">TOTAL:</td>
@@ -788,7 +789,7 @@ const Orders = () => {
                   ₹${(Number(order.totalPrice) * 0.18 / 1.18).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
                 <td style="text-align: right; border-left: none; font-weight: bold; font-size: 12px; color: #111;">
-                  ₹${Number(order.totalPrice).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  ₹${(Number(order.totalPrice) + (Number(order.totalPrice) > 999 ? 0 : 49)).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
               </tr>
             </tbody>
@@ -799,7 +800,7 @@ const Orders = () => {
             <div style="width: 55%; font-size: 11px; line-height: 1.6; text-align: left;">
               <strong>Amount in Words:</strong><br/>
               <span style="font-weight: 800; color: #222; font-size: 11.5px; text-transform: capitalize;">
-                ${numberToWords(Number(order.totalPrice))}
+                ${numberToWords(Number(order.totalPrice) + (Number(order.totalPrice) > 999 ? 0 : 49))}
               </span>
               <div style="margin-top: 25px; font-size: 9px; color: #555;">
                 Whether tax is payable under reverse charge - No
@@ -1254,7 +1255,7 @@ const Orders = () => {
                       <TableCell className="py-4">
                         <div className="space-y-0.5">
                           <p className="font-black text-amber-600 text-sm">
-                            ₹{Number(order.totalPrice || 0).toLocaleString()}
+                            ₹{(Number(order.totalPrice || 0) + (Number(order.totalPrice || 0) > 999 ? 0 : 49)).toLocaleString()}
                           </p>
                           <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-slate-400">
                             {order.paymentType}
@@ -1453,9 +1454,17 @@ const Orders = () => {
                                   <p><strong>State:</strong> {order.deliveryAddress.state}</p>
                                   <p><strong>Pincode:</strong> {order.deliveryAddress.pincode}</p>
                                   {(() => {
-                                    const addressQuery = order.deliveryAddress.latitude && order.deliveryAddress.longitude
-                                      ? `${order.deliveryAddress.latitude},${order.deliveryAddress.longitude}`
-                                      : `${order.deliveryAddress.flatnumber}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`;
+                                    const addressParts = [
+                                      order.deliveryAddress.flatnumber,
+                                      order.deliveryAddress.building,
+                                      order.deliveryAddress.street,
+                                      order.deliveryAddress.area,
+                                      order.deliveryAddress.landmark,
+                                      order.deliveryAddress.city,
+                                      order.deliveryAddress.state,
+                                      order.deliveryAddress.pincode
+                                    ].filter(Boolean);
+                                    const addressQuery = addressParts.join(", ");
                                     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`;
                                     return (
                                       <div className="mt-3 space-y-2">
@@ -1519,7 +1528,7 @@ const Orders = () => {
                               <div className="pt-4 border-t flex justify-between items-center">
                                 <span className="text-slate-500 text-xs font-bold uppercase">Estimated Bill</span>
                                 <span className="text-2xl font-black text-amber-600">
-                                  ₹{Number(order.totalPrice || 0).toLocaleString()}
+                                  ₹{(Number(order.totalPrice || 0) + (Number(order.totalPrice || 0) > 999 ? 0 : 49)).toLocaleString()}
                                 </span>
                               </div>
 
@@ -1605,7 +1614,7 @@ const Orders = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-black text-amber-600">
-                        ₹{Number(order.totalPrice || 0).toLocaleString()}
+                        ₹{(Number(order.totalPrice || 0) + (Number(order.totalPrice || 0) > 999 ? 0 : 49)).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -1786,9 +1795,17 @@ const Orders = () => {
                               <p><strong>State:</strong> {order.deliveryAddress.state}</p>
                               <p><strong>Pincode:</strong> {order.deliveryAddress.pincode}</p>
                               {(() => {
-                                const addressQuery = order.deliveryAddress.latitude && order.deliveryAddress.longitude
-                                  ? `${order.deliveryAddress.latitude},${order.deliveryAddress.longitude}`
-                                  : `${order.deliveryAddress.flatnumber}, ${order.deliveryAddress.city}, ${order.deliveryAddress.state} - ${order.deliveryAddress.pincode}`;
+                                const addressParts = [
+                                  order.deliveryAddress.flatnumber,
+                                  order.deliveryAddress.building,
+                                  order.deliveryAddress.street,
+                                  order.deliveryAddress.area,
+                                  order.deliveryAddress.landmark,
+                                  order.deliveryAddress.city,
+                                  order.deliveryAddress.state,
+                                  order.deliveryAddress.pincode
+                                ].filter(Boolean);
+                                const addressQuery = addressParts.join(", ");
                                 const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressQuery)}`;
                                 return (
                                   <div className="mt-3 space-y-2">
@@ -1852,7 +1869,7 @@ const Orders = () => {
                           <div className="pt-4 border-t flex justify-between items-center">
                             <span className="text-slate-500 text-[10px] md:text-xs font-bold uppercase">Estimated Bill</span>
                             <span className="text-xl md:text-2xl font-black text-amber-600">
-                              ₹{Number(order.totalPrice || 0).toLocaleString()}
+                              ₹{(Number(order.totalPrice || 0) + (Number(order.totalPrice || 0) > 999 ? 0 : 49)).toLocaleString()}
                             </span>
                           </div>
 
