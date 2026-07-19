@@ -642,17 +642,17 @@ const Orders = () => {
         <body>
           <!-- Repeating Watermark Layout -->
           <div class="watermark-container">
-            <div class="watermark-text" style="top: 15%; left: 10%;">GharSekro</div>
-            <div class="watermark-text" style="top: 15%; left: 60%;">GharSekro</div>
-            <div class="watermark-text" style="top: 45%; left: 35%;">GharSekro</div>
-            <div class="watermark-text" style="top: 75%; left: 10%;">GharSekro</div>
-            <div class="watermark-text" style="top: 75%; left: 60%;">GharSekro</div>
+            <div class="watermark-text" style="top: 15%; left: 10%;">GharSeKro</div>
+            <div class="watermark-text" style="top: 15%; left: 60%;">GharSeKro</div>
+            <div class="watermark-text" style="top: 45%; left: 35%;">GharSeKro</div>
+            <div class="watermark-text" style="top: 75%; left: 10%;">GharSeKro</div>
+            <div class="watermark-text" style="top: 75%; left: 60%;">GharSeKro</div>
           </div>
           <!-- Header Banner -->
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: 15px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <img src="/logo.png" style="height: 45px; width: auto; object-fit: contain;" alt="GharSekro" />
-              <div style="font-size: 20px; font-weight: 800; color: #111; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing: -0.5px; text-transform: uppercase;">GharSekro</div>
+              <img src="/logo.png" style="height: 45px; width: auto; object-fit: contain;" alt="GharSeKro" />
+              <div style="font-size: 20px; font-weight: 800; color: #111; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing: -0.5px; text-transform: uppercase;">GharSeKro</div>
             </div>
             <div style="text-align: right;">
               <h1 style="font-size: 16px; margin: 0; font-weight: 800; color: #111; text-transform: uppercase; letter-spacing: 0.5px;">Tax Invoice/Bill of Supply/Cash Memo</h1>
@@ -666,7 +666,7 @@ const Orders = () => {
               <td style="width: 50%; border: none; vertical-align: top; padding: 0 15px 0 0; line-height: 1.5;">
                 <div style="font-weight: bold; font-size: 11px; margin-bottom: 5px; color: #444; text-transform: uppercase;">Sold By :</div>
                 <div style="font-size: 11px;">
-                  <strong>GharSekro</strong><br/>
+                  <strong>GharSeKro</strong><br/>
                   Sictour, Near Vastu Bihar Phase 1<br/>
                   GORAKHPUR, UTTAR PRADESH, 273010<br/>
                   IN<br/>
@@ -822,11 +822,11 @@ const Orders = () => {
             
             <div style="width: 40%; text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
               <div style="font-weight: bold; font-size: 11px; margin-bottom: 5px; color: #333;">
-                For GharSekro:
+                For GharSeKro:
               </div>
               <div style="width: 170px; border: 1px dashed #bbb; padding: 12px 5px; text-align: center; font-size: 9.5px; color: #777; background: #fafafa; border-radius: 6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);">
                 <div style="font-family: 'Georgia', serif; font-size: 18px; font-weight: bold; color: #2b3947; font-style: italic; transform: rotate(-4deg); margin-bottom: 4px; letter-spacing: 0.5px; opacity: 0.85;">
-                  GharSekro
+                  GharSeKro
                 </div>
                 Authorized Signatory
               </div>
